@@ -1,0 +1,23 @@
+{
+	"name": "notas_fiscais_qive_function",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "otaviomirandadev@gmail.com",
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch",
+		"prebuild": "echo Building TypeScript..."
+	},
+	"dependencies": {
+		"@types/html-pdf-node": "^1.0.2",
+		"axios": "^1.10.0",
+		"dotenv": "^17.2.3",
+		"html-pdf-node": "^1.0.8",
+		"zcatalyst-sdk-node": "latest",
+		"zod": "^4.0.5"
+	},
+	"devDependencies": {
+		"@types/node": "^24.0.15",
+		"typescript": "^5.8.3"
+	}
+}
