@@ -6,13 +6,15 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"prebuild": "echo Building TypeScript..."
+		"prebuild": "echo Building TypeScript...",
+		"pkg": "npm run build && pkg dist/index.js --target node18-win-x64 --output dist/pdfGenerator.exe"
 	},
 	"dependencies": {
 		"@types/html-pdf-node": "^1.0.2",
 		"axios": "^1.10.0",
 		"dotenv": "^17.2.3",
 		"html-pdf-node": "^1.0.8",
+		"pkg": "^5.8.1",
 		"zcatalyst-sdk-node": "latest",
 		"zod": "^4.0.5"
 	},

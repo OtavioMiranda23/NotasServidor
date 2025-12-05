@@ -1,3 +1,4 @@
+import readline from "readline";
 import ZohoApi from "./infra/http/zoho/ZohoApi";
 import GetNFe from "./application/usecases/getNFe";
 import GetNFSe from "./application/usecases/getNFSe";
@@ -95,6 +96,30 @@ async function main() {
     );
   }
 }
+
+async function waitForExitSignal() {
+  const pauseOnExitEnv = process.env.PAUSE_ON_EXIT;
+  const pauseOnExit =
+    pauseOnExitEnv === undefined || pauseOnExitEnv.toLowerCase() === "true";
+
+  if (!pauseOnExit) {
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question("Execução finalizada. Pressione Enter para fechar...", () => {
+      rl.close();
+      resolve();
+    });
+  });
+}
+
 (async () => {
   await main();
+  await waitForExitSignal();
 })();

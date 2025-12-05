@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const readline_1 = __importDefault(require("readline"));
 const ZohoApi_1 = __importDefault(require("./infra/http/zoho/ZohoApi"));
 const getNFe_1 = __importDefault(require("./application/usecases/getNFe"));
 const getNFSe_1 = __importDefault(require("./application/usecases/getNFSe"));
@@ -75,6 +76,24 @@ async function main() {
         }));
     }
 }
+async function waitForExitSignal() {
+    const pauseOnExitEnv = process.env.PAUSE_ON_EXIT;
+    const pauseOnExit = pauseOnExitEnv === undefined || pauseOnExitEnv.toLowerCase() === "true";
+    if (!pauseOnExit) {
+        return;
+    }
+    await new Promise((resolve) => {
+        const rl = readline_1.default.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });
+        rl.question("Execução finalizada. Pressione Enter para fechar...", () => {
+            rl.close();
+            resolve();
+        });
+    });
+}
 (async () => {
     await main();
+    await waitForExitSignal();
 })();

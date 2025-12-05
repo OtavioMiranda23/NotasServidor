@@ -16,8 +16,8 @@ class NFSeController {
         try {
             const [currentDate, _] = new Date().toISOString().split("T")[0];
             const input = {
-                dateFrom: currentDate,
-                dateTo: currentDate,
+                dateFrom: "2025-11-28",
+                dateTo: "2025-11-28",
                 cursor: "",
                 isV2: false,
             };
