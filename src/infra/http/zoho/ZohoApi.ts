@@ -12,6 +12,8 @@ import { Blob } from "buffer";
 import { blob } from "node:stream/consumers";
 import { Readable } from "node:stream";
 import { log } from "node:console";
+// import htmlPdf from "html-pdf-node";
+
 export interface IBaseConfigApi {
   tableName: string;
   formName: string;
@@ -66,7 +68,6 @@ export default class ZohoApi implements IApiNota {
   #axios: AxiosInstance = axios;
   #accessToken: string | null = null;
   #credentials: ZohoCredentials;
-
   constructor(credentials: ZohoCredentials) {
     this.#credentials = credentials;
   }

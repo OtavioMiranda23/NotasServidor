@@ -7,7 +7,7 @@
 		"build": "tsc",
 		"dev": "tsc --watch",
 		"prebuild": "echo Building TypeScript...",
-		"pkg": "npm run build && pkg dist/index.js --target node18-win-x64 --output dist/pdfGenerator.exe"
+		"pkg": "npm run build && pkg dist/index.js --target node18-win-x64 --output dist/pdfGenerator.exe --options expose-gc --public --public-packages \"axios,html-pdf-node\""
 	},
 	"dependencies": {
 		"@types/html-pdf-node": "^1.0.2",
@@ -21,5 +21,16 @@
 	"devDependencies": {
 		"@types/node": "^24.0.15",
 		"typescript": "^5.8.3"
+	},
+	"pkg": {
+		"assets": [
+			"node_modules/axios/**/*",
+			"node_modules/html-pdf-node/**/*",
+			"node_modules/puppeteer/**/*"
+		],
+		"targets": [
+			"node18-win-x64"
+		],
+		"outputPath": "dist"
 	}
 }
