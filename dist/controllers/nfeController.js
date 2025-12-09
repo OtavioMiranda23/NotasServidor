@@ -14,7 +14,7 @@ class NFeController {
     }
     async createNFe(errorConfig) {
         try {
-            const [currentDate, _] = new Date().toISOString().split("T")[0];
+            const [currentDate, _] = new Date().toISOString().split("T");
             const dataNFe = {
                 dateFrom: currentDate,
                 dateTo: currentDate,

@@ -14,7 +14,7 @@ class NFSeController {
     }
     async createNFSe(errorConfig) {
         try {
-            const [currentDate, _] = new Date().toISOString().split("T")[0];
+            const [currentDate, _] = new Date().toISOString().split("T");
             const input = {
                 dateFrom: currentDate,
                 dateTo: currentDate,
