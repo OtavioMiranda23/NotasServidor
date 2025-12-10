@@ -260,13 +260,15 @@ export default class QiveApi {
         dataNFSe.isV2 ? "v2" : "v1"
       }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
         dataNFSe.dateTo
-      }&cursor=${dataNFSe.cursor}&format_type=JSON&limit=${limit}`;
+      }&cursor=${
+        dataNFSe.cursor
+      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
     } else {
       targetUrl = `https://api.arquivei.com.br/${
         dataNFSe.isV2 ? "v2" : "v1"
       }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
         dataNFSe.dateFrom
-      }&format_type=JSON&limit=${limit}`;
+      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
     }
     let nextUrl = targetUrl;
     let count = 1;

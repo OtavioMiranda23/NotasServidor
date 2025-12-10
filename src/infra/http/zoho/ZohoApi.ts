@@ -278,7 +278,11 @@ export default class ZohoApi implements IApiNota {
       throw new Error("accessToken is null ao fazer upload de arquivo");
     }
     const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${data.app_name}/report/${data.report_name}/${data.idCreatedRecord}/${data.field_name}/upload`;
+    if (!Buffer.isBuffer(data.buffer)) {
+      console.error(data);
 
+      throw new Error("Buffer inválido para upload");
+    }
     try {
       let formData = new FormData();
       formData.append("file", Readable.from([data.buffer]), {
