@@ -300,7 +300,12 @@ export default class ZohoApi implements IApiNota {
         data: formData,
       };
       const response = await axios.request(config);
-      console.log("------------------------");
+      console.log(
+        `Buffer criado para a nota ${data.idCreatedRecord}: ${data.buffer.length} bytes`
+      );
+      console.log(
+        `Resposta do id da nota ${data.idCreatedRecord} upload Zoho:`
+      );
       console.log(JSON.stringify(response.data));
 
       if (response.data?.code && response.data.code !== 3000) {

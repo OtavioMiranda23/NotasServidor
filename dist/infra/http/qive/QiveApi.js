@@ -72,12 +72,19 @@ class QiveApi {
             "X-API-KEY": __classPrivateFieldGet(this, _QiveApi_credentials, "f").apiKey,
         };
         try {
+            console.log(`Parametros do update: ${JSON.stringify(content)}`);
             const res = await __classPrivateFieldGet(this, _QiveApi_axios, "f").put(targetUrl, {
-                data: content,
+                data: typeNota === "nfse"
+                    ? content.map((el) => ({
+                        access_key: el.access_key,
+                        value: el.value,
+                    }))
+                    : content.map((el) => ({ id: el.id, value: el.value })),
             }, { headers: headers });
-            console.log(res);
+            console.log(`Resposta do update${res}`);
         }
         catch (error) {
+            console.log(`Erro do update${error}`);
             throw new QiveApiError_1.default("Erro ao atualizar nota", JSON.stringify(error));
         }
     }
@@ -100,10 +107,10 @@ class QiveApi {
         let nextUrl = targetUrl;
         let count = 1;
         let fieldsFormArr;
-        while (count > 0 && count < 2) {
+        while (count > 0) {
             const res = await __classPrivateFieldGet(this, _QiveApi_axios, "f").get(nextUrl, options);
             nextUrl = res.data.page.next;
-            count += 1;
+            count = res.data.count;
             if (!res.data.data.length)
                 continue;
             fieldsFormArr = QiveApi.getValues(res.data.data);
@@ -118,23 +125,22 @@ class QiveApi {
             };
             const attemptsNumber = 3;
             try {
+                const resZ = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").insertRecord(field, __classPrivateFieldGet(this, _QiveApi_successConfig, "f"), attemptsNumber);
+                const currentBatchIds = resZ.result.map((el) => el.data.ID);
+                __classPrivateFieldGet(this, _QiveApi_idsFoundedNotas, "f").nfe.idRecord.push(...currentBatchIds);
                 const pdfsBuffer = [];
                 for await (const nota of fieldsFormArr) {
                     const pdfBuffer = await __classPrivateFieldGet(this, _QiveApi_createImage, "f").renderizarNotaNfe(nota);
                     pdfsBuffer.push(pdfBuffer);
                 }
-                const resZ = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").insertRecord(field, __classPrivateFieldGet(this, _QiveApi_successConfig, "f"), attemptsNumber);
-                resZ.result.forEach((el) => {
-                    __classPrivateFieldGet(this, _QiveApi_idsFoundedNotas, "f").nfe.idRecord.push(el.data.ID);
-                });
-                for await (const [index, notaId,] of __classPrivateFieldGet(this, _QiveApi_idsFoundedNotas, "f").nfe.idRecord.entries()) {
+                for (let i = 0; i < currentBatchIds.length; i++) {
                     const params = {
-                        idCreatedRecord: notaId,
+                        idCreatedRecord: currentBatchIds[i],
                         app_name: "base-notas-qive",
                         form_name: "Copy_of_NFe",
                         report_name: "Copy_of_NFe_Report",
                         field_name: "imagem",
-                        buffer: pdfsBuffer[index],
+                        buffer: pdfsBuffer[i],
                     };
                     const responseUpload = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").uploadFile(params);
                     if (responseUpload?.code !== 3000) {
@@ -173,7 +179,7 @@ class QiveApi {
             targetUrl = `https://api.arquivei.com.br/${dataNFSe.isV2 ? "v2" : "v1"}/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${dataNFSe.dateTo}&cursor=${dataNFSe.cursor}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
         }
         else {
-            targetUrl = `https://api.arquivei.com.br/${dataNFSe.isV2 ? "v2" : "v1"}/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${dataNFSe.dateFrom}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
+            targetUrl = `https://api.arquivei.com.br/${dataNFSe.isV2 ? "v2" : "v1"}/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${dataNFSe.dateTo}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
         }
         let nextUrl = targetUrl;
         let count = 1;
@@ -187,7 +193,7 @@ class QiveApi {
             fieldsFormArr = QiveApi.getValuesNFSe(res.data.data);
             const idsNotas = fieldsFormArr.map((el) => el.IdNota);
             const idsParaAtualizarNotas = fieldsFormArr.map((el) => ({
-                id: el.id,
+                id: el.IdNota,
                 value: "INSERIDA",
             }));
             const idsRecord = fieldsFormArr.map((el) => el.ID);
@@ -198,22 +204,21 @@ class QiveApi {
             const attemptsNumber = 3;
             try {
                 const resZ = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").insertRecord(field, __classPrivateFieldGet(this, _QiveApi_successConfig, "f"), attemptsNumber);
-                resZ.result.forEach((el) => {
-                    __classPrivateFieldGet(this, _QiveApi_idsFoundedNotas, "f").nfse.idRecord.push(el.data.ID);
-                });
+                const currentBatchIds = resZ.result.map((el) => el.data.ID);
+                __classPrivateFieldGet(this, _QiveApi_idsFoundedNotas, "f").nfse.idRecord.push(...currentBatchIds);
                 const pdfNfseBuffers = [];
                 for await (const notaNFSe of fieldsFormArr) {
                     const pdfNfseBuffer = await __classPrivateFieldGet(this, _QiveApi_createImage, "f").renderizarNotaNfse(notaNFSe);
                     pdfNfseBuffers.push(pdfNfseBuffer);
                 }
-                for await (const [index, notaId,] of __classPrivateFieldGet(this, _QiveApi_idsFoundedNotas, "f").nfse.idRecord.entries()) {
+                for (let i = 0; i < currentBatchIds.length; i++) {
                     const params = {
-                        idCreatedRecord: notaId,
+                        idCreatedRecord: currentBatchIds[i],
                         app_name: "base-notas-qive",
                         form_name: "Copy_of_NFSe",
                         report_name: "Copy_of_NFSe_Report",
                         field_name: "imagem",
-                        buffer: pdfNfseBuffers[index],
+                        buffer: pdfNfseBuffers[i],
                     };
                     const responseNfseUpload = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").uploadFile(params);
                     if (responseNfseUpload?.code !== 3000) {

@@ -110,15 +110,24 @@ export default class QiveApi {
       "X-API-KEY": this.#credentials.apiKey,
     };
     try {
+      console.log(`Parametros do update: ${JSON.stringify(content)}`);
+
       const res = await this.#axios.put(
         targetUrl,
         {
-          data: content,
+          data:
+            typeNota === "nfse"
+              ? content.map((el) => ({
+                  access_key: el.access_key,
+                  value: el.value,
+                }))
+              : content.map((el) => ({ id: el.id, value: el.value })),
         },
         { headers: headers }
       );
-      console.log(res);
+      console.log(`Resposta do update${res}`);
     } catch (error) {
+      console.log(`Erro do update${error}`);
       throw new QiveApiError("Erro ao atualizar nota", JSON.stringify(error));
     }
   }
@@ -170,10 +179,10 @@ export default class QiveApi {
     let nextUrl = targetUrl;
     let count = 1;
     let fieldsFormArr;
-    while (count > 0 && count < 2) {
+    while (count > 0) {
       const res = await this.#axios.get(nextUrl, options);
       nextUrl = res.data.page.next;
-      count += 1;
+      count = res.data.count;
       if (!res.data.data.length) continue;
       fieldsFormArr = QiveApi.getValues(res.data.data);
       const idsNotas: string[] = fieldsFormArr.map((el: any) => el.id_nota);
@@ -182,39 +191,40 @@ export default class QiveApi {
           access_key: el.access_key,
           value: "INSERIDA",
         }));
+
       this.#idsFoundedNotas.nfe.idNota.push(...idsNotas);
       const field = {
         data: fieldsFormArr,
       };
       const attemptsNumber = 3;
       try {
+        const resZ = await this.#zohoApi.insertRecord(
+          field,
+          this.#successConfig,
+          attemptsNumber
+        );
+
+        const currentBatchIds = resZ.result.map((el: any) => el.data.ID);
+        this.#idsFoundedNotas.nfe.idRecord.push(...currentBatchIds);
+
         const pdfsBuffer: Buffer<ArrayBufferLike>[] = [];
         for await (const nota of fieldsFormArr) {
           const pdfBuffer = await this.#createImage.renderizarNotaNfe(nota);
           //@ts-ignore
           pdfsBuffer.push(pdfBuffer);
         }
-        const resZ = await this.#zohoApi.insertRecord(
-          field,
-          this.#successConfig,
-          attemptsNumber
-        );
-        resZ.result.forEach((el: any) => {
-          this.#idsFoundedNotas.nfe.idRecord.push(el.data.ID);
-        });
-        for await (const [
-          index,
-          notaId,
-        ] of this.#idsFoundedNotas.nfe.idRecord.entries()) {
+
+        for (let i = 0; i < currentBatchIds.length; i++) {
           const params = {
-            idCreatedRecord: notaId,
+            idCreatedRecord: currentBatchIds[i],
             app_name: "base-notas-qive",
             form_name: "Copy_of_NFe",
             report_name: "Copy_of_NFe_Report",
             field_name: "imagem",
-            buffer: pdfsBuffer[index],
+            buffer: pdfsBuffer[i],
           };
           const responseUpload = await this.#zohoApi.uploadFile(params);
+
           if (responseUpload?.code !== 3000) {
             console.error(responseUpload);
           }
@@ -267,7 +277,7 @@ export default class QiveApi {
       targetUrl = `https://api.arquivei.com.br/${
         dataNFSe.isV2 ? "v2" : "v1"
       }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
-        dataNFSe.dateFrom
+        dataNFSe.dateTo
       }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
     }
     let nextUrl = targetUrl;
@@ -282,7 +292,7 @@ export default class QiveApi {
       const idsNotas = fieldsFormArr.map((el: any) => el.IdNota);
       const idsParaAtualizarNotas: { id: string; value: string }[] =
         fieldsFormArr.map((el: any) => ({
-          id: el.id,
+          id: el.IdNota,
           value: "INSERIDA",
         }));
       const idsRecord = fieldsFormArr.map((el: any) => el.ID);
@@ -297,9 +307,10 @@ export default class QiveApi {
           this.#successConfig,
           attemptsNumber
         );
-        resZ.result.forEach((el: any) => {
-          this.#idsFoundedNotas.nfse.idRecord.push(el.data.ID);
-        });
+
+        const currentBatchIds = resZ.result.map((el: any) => el.data.ID);
+        this.#idsFoundedNotas.nfse.idRecord.push(...currentBatchIds);
+
         const pdfNfseBuffers: Buffer<ArrayBufferLike>[] = [];
         for await (const notaNFSe of fieldsFormArr) {
           const pdfNfseBuffer = await this.#createImage.renderizarNotaNfse(
@@ -308,19 +319,18 @@ export default class QiveApi {
           //@ts-ignore
           pdfNfseBuffers.push(pdfNfseBuffer);
         }
-        for await (const [
-          index,
-          notaId,
-        ] of this.#idsFoundedNotas.nfse.idRecord.entries()) {
+
+        for (let i = 0; i < currentBatchIds.length; i++) {
           const params = {
-            idCreatedRecord: notaId,
+            idCreatedRecord: currentBatchIds[i],
             app_name: "base-notas-qive",
             form_name: "Copy_of_NFSe",
             report_name: "Copy_of_NFSe_Report",
             field_name: "imagem",
-            buffer: pdfNfseBuffers[index],
+            buffer: pdfNfseBuffers[i],
           };
           const responseNfseUpload = await this.#zohoApi.uploadFile(params);
+
           if (responseNfseUpload?.code !== 3000) {
             console.error(responseNfseUpload);
           }
