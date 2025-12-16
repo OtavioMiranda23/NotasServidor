@@ -74,17 +74,19 @@ class QiveApi {
         try {
             console.log(`Parametros do update: ${JSON.stringify(content)}`);
             const res = await __classPrivateFieldGet(this, _QiveApi_axios, "f").put(targetUrl, {
-                data: typeNota === "nfse"
+                data: typeNota === "nfe"
                     ? content.map((el) => ({
                         access_key: el.access_key,
                         value: el.value,
                     }))
                     : content.map((el) => ({ id: el.id, value: el.value })),
             }, { headers: headers });
-            console.log(`Resposta do update${res}`);
+            console.log(`Resposta do update:`);
+            console.log(res.data);
         }
         catch (error) {
-            console.log(`Erro do update${error}`);
+            console.log(`Erro do update:`);
+            console.log(error);
             throw new QiveApiError_1.default("Erro ao atualizar nota", JSON.stringify(error));
         }
     }

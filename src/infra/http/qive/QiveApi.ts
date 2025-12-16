@@ -116,7 +116,7 @@ export default class QiveApi {
         targetUrl,
         {
           data:
-            typeNota === "nfse"
+            typeNota === "nfe"
               ? content.map((el) => ({
                   access_key: el.access_key,
                   value: el.value,
@@ -125,9 +125,11 @@ export default class QiveApi {
         },
         { headers: headers }
       );
-      console.log(`Resposta do update${res}`);
+      console.log(`Resposta do update:`);
+      console.log(res.data);
     } catch (error) {
-      console.log(`Erro do update${error}`);
+      console.log(`Erro do update:`);
+      console.log(error);
       throw new QiveApiError("Erro ao atualizar nota", JSON.stringify(error));
     }
   }
