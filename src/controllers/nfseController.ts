@@ -21,11 +21,17 @@ export default class NFSeController {
     try {
       const [currentDate, _] = new Date().toISOString().split("T");
       const input = {
-        dateFrom: currentDate,
-        dateTo: currentDate,
+        dateFrom: "2025-12-12",
+        dateTo: "2025-12-12",
         cursor: "",
         isV2: false,
       };
+      // const input = {
+      //   dateFrom: currentDate,
+      //   dateTo: currentDate,
+      //   cursor: "",
+      //   isV2: false,
+      // };
 
       const dataResult = await this.getNFSe.execute(input, errorConfig);
       const result = {

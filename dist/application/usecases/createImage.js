@@ -544,7 +544,7 @@ class CreateImage {
               <strong>Código da NFe:</strong> ${this.safeValue(nota.ide_cNF)}<br>
             </div>
             <div class="certificado-x509">
-              <span>Chave de integridade da NFe: ${this.safeValue(nota.ID)}</span>
+              <span>Chave de integridade da NFe: ${this.extractChaveIntegridade(nota.ID)}</span>
             </div>
           </div>
           <!-- Rodapé -->
@@ -607,6 +607,11 @@ class CreateImage {
         catch (error) {
             return null;
         }
+    }
+    extractChaveIntegridade(id) {
+        if (!id)
+            return "Não encontrada";
+        return id?.split("NFe")[1] || "Não encontrada";
     }
     buildNFSeTemplate(nota) {
         const formatCurrency = (value) => {

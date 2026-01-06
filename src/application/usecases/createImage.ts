@@ -674,7 +674,7 @@ export default class CreateImage {
               )}<br>
             </div>
             <div class="certificado-x509">
-              <span>Chave de integridade da NFe: ${this.safeValue(
+              <span>Chave de integridade da NFe: ${this.extractChaveIntegridade(
                 nota.ID
               )}</span>
             </div>
@@ -745,6 +745,11 @@ export default class CreateImage {
     } catch (error) {
       return null;
     }
+  }
+
+  private extractChaveIntegridade(id: string | undefined): string {
+    if (!id) return "Não encontrada";
+    return id?.split("NFe")[1] || "Não encontrada";
   }
 
   private buildNFSeTemplate(nota: NotaNFSe): string {
