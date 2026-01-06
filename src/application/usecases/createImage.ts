@@ -675,7 +675,7 @@ export default class CreateImage {
             </div>
             <div class="certificado-x509">
               <span>Chave de integridade da NFe: ${this.extractChaveIntegridade(
-                nota.ID
+                nota.id_nota
               )}</span>
             </div>
           </div>

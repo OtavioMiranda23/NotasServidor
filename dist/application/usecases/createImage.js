@@ -544,7 +544,7 @@ class CreateImage {
               <strong>Código da NFe:</strong> ${this.safeValue(nota.ide_cNF)}<br>
             </div>
             <div class="certificado-x509">
-              <span>Chave de integridade da NFe: ${this.extractChaveIntegridade(nota.ID)}</span>
+              <span>Chave de integridade da NFe: ${this.extractChaveIntegridade(nota.id_nota)}</span>
             </div>
           </div>
           <!-- Rodapé -->
