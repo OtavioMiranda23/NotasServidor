@@ -10,8 +10,6 @@ const getNFe_1 = __importDefault(require("./application/usecases/getNFe"));
 const getNFSe_1 = __importDefault(require("./application/usecases/getNFSe"));
 const nfeController_1 = __importDefault(require("./controllers/nfeController"));
 const nfseController_1 = __importDefault(require("./controllers/nfseController"));
-const logger_1 = __importDefault(require("./infra/logger/logger"));
-const logger = new logger_1.default("app.log");
 const baseDir = process.pkg
     ? path_1.default.dirname(process.execPath)
     : process.cwd();
