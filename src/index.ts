@@ -6,6 +6,9 @@ import GetNFe from "./application/usecases/getNFe";
 import GetNFSe from "./application/usecases/getNFSe";
 import NFeController from "./controllers/nfeController";
 import NFSeController from "./controllers/nfseController";
+import Logger from "./infra/logger/logger";
+
+const logger = new Logger("app.log");
 
 // Carregar variáveis de ambiente do diretório do executável (funciona com node e com pkg)
 const baseDir = (process as any).pkg
@@ -111,6 +114,7 @@ async function main() {
       errorNFeConfig,
       errorNFSeConfig
     );
+
     console.log("\nInicializando ZohoApi...");
     const zohoApi = await ZohoApi.init(credentialsZoho);
     console.log("✓ ZohoApi inicializada com sucesso");

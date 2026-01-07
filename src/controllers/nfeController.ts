@@ -26,6 +26,9 @@ export default class NFeController {
         cursor: "",
         isV2: false,
       };
+      console.log(`RODANDO COM O INPUT:`);
+      console.log(dataNFe);
+
       const dataNFeRaw = dataNFe as DataNFe;
       const dataResult = await this.getNFe.execute(dataNFeRaw, errorConfig);
       const result = {

@@ -16,11 +16,13 @@ class NFSeController {
         try {
             const [currentDate, _] = new Date().toISOString().split("T");
             const input = {
-                dateFrom: "2025-12-12",
-                dateTo: "2025-12-12",
+                dateFrom: currentDate,
+                dateTo: currentDate,
                 cursor: "",
                 isV2: false,
             };
+            console.log(`RODANDO COM O INPUT:`);
+            console.log(input);
             const dataResult = await this.getNFSe.execute(input, errorConfig);
             const result = {
                 data: dataResult,
