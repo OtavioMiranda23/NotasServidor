@@ -146,7 +146,9 @@ class QiveApi {
                     };
                     const responseUpload = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").uploadFile(params);
                     if (responseUpload?.code !== 3000) {
+                        console.error("Erro ao fazer upload do arquivo NFe:");
                         console.error(responseUpload);
+                        throw new Error("Erro ao fazer upload do arquivo NFe");
                     }
                 }
                 await this.updateNota(accessKeys, "nfe");
@@ -224,7 +226,9 @@ class QiveApi {
                     };
                     const responseNfseUpload = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").uploadFile(params);
                     if (responseNfseUpload?.code !== 3000) {
+                        console.error("Erro ao fazer upload do arquivo NFSe:");
                         console.error(responseNfseUpload);
+                        throw new Error("Erro ao fazer upload do arquivo NFSe");
                     }
                 }
                 await this.updateNota(idsParaAtualizarNotas, "nfse");

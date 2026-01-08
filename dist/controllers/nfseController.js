@@ -9,15 +9,16 @@ exports.DataNFSeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFSeController {
-    constructor(getNFSe) {
+    constructor(getNFSe, dateToSearch) {
         this.getNFSe = getNFSe;
+        this.dateToSearch = dateToSearch?.trim() || undefined;
     }
     async createNFSe(errorConfig) {
         try {
             const [currentDate, _] = new Date().toISOString().split("T");
             const input = {
-                dateFrom: currentDate,
-                dateTo: currentDate,
+                dateFrom: this.dateToSearch || currentDate,
+                dateTo: this.dateToSearch || currentDate,
                 cursor: "",
                 isV2: false,
             };

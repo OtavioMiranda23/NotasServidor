@@ -9,15 +9,16 @@ exports.DataNFeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFeController {
-    constructor(getNFe) {
+    constructor(getNFe, dateToSearch) {
         this.getNFe = getNFe;
+        this.dateToSearch = dateToSearch?.trim() || undefined;
     }
     async createNFe(errorConfig) {
         try {
             const [currentDate, _] = new Date().toISOString().split("T");
             const dataNFe = {
-                dateFrom: currentDate,
-                dateTo: currentDate,
+                dateFrom: this.dateToSearch || currentDate,
+                dateTo: this.dateToSearch || currentDate,
                 cursor: "",
                 isV2: false,
             };
