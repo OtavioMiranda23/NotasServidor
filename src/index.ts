@@ -45,6 +45,7 @@ async function main() {
       "ZOHO_REFRESH_TOKEN",
       "QIVE_X_API_ID",
       "X_API_KEY",
+      "DATE_TO_SEARCH",
     ];
 
     console.log("\nValidando variáveis de ambiente...");
@@ -124,8 +125,11 @@ async function main() {
     console.log("✓ Use cases criados");
 
     console.log("\nCriando controllers...");
-    const nfeController = new NFeController(getNFe);
-    const nfseController = new NFSeController(getNFSe);
+    const nfeController = new NFeController(getNFe, process.env.DATE_TO_SEARCH);
+    const nfseController = new NFSeController(
+      getNFSe,
+      process.env.DATE_TO_SEARCH
+    );
     console.log("✓ Controllers criados");
 
     console.log("\n=== PROCESSANDO NFe ===");

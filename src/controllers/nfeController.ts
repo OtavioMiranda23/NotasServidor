@@ -12,17 +12,18 @@ export const DataNFeSchema = z.object({
 
 export default class NFeController {
   private getNFe: GetNFe;
-
-  constructor(getNFe: GetNFe) {
+  private dateToSearch: string | undefined;
+  constructor(getNFe: GetNFe, dateToSearch: string | undefined) {
     this.getNFe = getNFe;
+    this.dateToSearch = dateToSearch?.trim() || undefined;
   }
 
   public async createNFe(errorConfig: IBaseConfigApi) {
     try {
       const [currentDate, _] = new Date().toISOString().split("T");
       const dataNFe = {
-        dateFrom: currentDate,
-        dateTo: currentDate,
+        dateFrom: this.dateToSearch || currentDate,
+        dateTo: this.dateToSearch || currentDate,
         cursor: "",
         isV2: false,
       };

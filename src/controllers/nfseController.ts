@@ -12,17 +12,18 @@ export const DataNFSeSchema = z.object({
 
 export default class NFSeController {
   private getNFSe: GetNFSe;
-
-  constructor(getNFSe: GetNFSe) {
+  private dateToSearch: string | undefined;
+  constructor(getNFSe: GetNFSe, dateToSearch: string | undefined) {
     this.getNFSe = getNFSe;
+    this.dateToSearch = dateToSearch?.trim() || undefined;
   }
 
   public async createNFSe(errorConfig: IBaseConfigApi) {
     try {
       const [currentDate, _] = new Date().toISOString().split("T");
       const input = {
-        dateFrom: currentDate,
-        dateTo: currentDate,
+        dateFrom: this.dateToSearch || currentDate,
+        dateTo: this.dateToSearch || currentDate,
         cursor: "",
         isV2: false,
       };
