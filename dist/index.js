@@ -34,7 +34,11 @@ async function main() {
             "DATE_TO_SEARCH",
         ];
         console.log("\nValidando variáveis de ambiente...");
-        const missingEnvs = requiredEnvs.filter((env) => !process.env[env]);
+        const missingEnvs = requiredEnvs.filter((env) => {
+            if (env !== "DATE_TO_SEARCH") {
+                return !process.env[env];
+            }
+        });
         if (missingEnvs.length > 0) {
             console.error("\n❌ ERRO: Variáveis de ambiente ausentes:");
             missingEnvs.forEach((env) => console.error(`  ✗ ${env}`));
@@ -74,7 +78,12 @@ async function main() {
             tableName: process.env.TABLE_NAME || "base-notas-qive",
         };
         console.log("VARIAVEIS");
-        console.log(credentialsZoho, successNFeConfig, successNFSeConfig, credentialsQive, errorNFeConfig, errorNFSeConfig);
+        let dateToSearch = process.env.DATE_TO_SEARCH;
+        if (!process.env.DATE_TO_SEARCH ||
+            process.env.DATE_TO_SEARCH?.trim().length === 0) {
+            dateToSearch = undefined;
+        }
+        console.log(credentialsZoho, successNFeConfig, successNFSeConfig, credentialsQive, errorNFeConfig, errorNFSeConfig, { dateToSearch });
         console.log("\nInicializando ZohoApi...");
         const zohoApi = await ZohoApi_1.default.init(credentialsZoho);
         console.log("✓ ZohoApi inicializada com sucesso");
@@ -83,9 +92,10 @@ async function main() {
         const getNFSe = new getNFSe_1.default(zohoApi, credentialsQive, successNFSeConfig);
         console.log("✓ Use cases criados");
         console.log("\nCriando controllers...");
-        const nfeController = new nfeController_1.default(getNFe, process.env.DATE_TO_SEARCH);
-        const nfseController = new nfseController_1.default(getNFSe, process.env.DATE_TO_SEARCH);
+        const nfeController = new nfeController_1.default(getNFe, dateToSearch);
+        const nfseController = new nfseController_1.default(getNFSe, dateToSearch);
         console.log("✓ Controllers criados");
+        console.log(dateToSearch);
         console.log("\n=== PROCESSANDO NFe ===");
         const nfeResult = await nfeController.createNFe(errorNFeConfig);
         if (nfeResult.status === 200) {

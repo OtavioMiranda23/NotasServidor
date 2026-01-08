@@ -49,7 +49,11 @@ async function main() {
     ];
 
     console.log("\nValidando variáveis de ambiente...");
-    const missingEnvs = requiredEnvs.filter((env) => !process.env[env]);
+    const missingEnvs = requiredEnvs.filter((env) => {
+      if (env !== "DATE_TO_SEARCH") {
+        return !process.env[env];
+      }
+    });
 
     if (missingEnvs.length > 0) {
       console.error("\n❌ ERRO: Variáveis de ambiente ausentes:");
@@ -106,13 +110,21 @@ async function main() {
     };
     console.log("VARIAVEIS");
 
+    let dateToSearch = process.env.DATE_TO_SEARCH;
+    if (
+      !process.env.DATE_TO_SEARCH ||
+      process.env.DATE_TO_SEARCH?.trim().length === 0
+    ) {
+      dateToSearch = undefined;
+    }
     console.log(
       credentialsZoho,
       successNFeConfig,
       successNFSeConfig,
       credentialsQive,
       errorNFeConfig,
-      errorNFSeConfig
+      errorNFSeConfig,
+      { dateToSearch }
     );
 
     console.log("\nInicializando ZohoApi...");
@@ -125,12 +137,11 @@ async function main() {
     console.log("✓ Use cases criados");
 
     console.log("\nCriando controllers...");
-    const nfeController = new NFeController(getNFe, process.env.DATE_TO_SEARCH);
-    const nfseController = new NFSeController(
-      getNFSe,
-      process.env.DATE_TO_SEARCH
-    );
+    const nfeController = new NFeController(getNFe, dateToSearch);
+    const nfseController = new NFSeController(getNFSe, dateToSearch);
     console.log("✓ Controllers criados");
+
+    console.log(dateToSearch);
 
     console.log("\n=== PROCESSANDO NFe ===");
     const nfeResult = await nfeController.createNFe(errorNFeConfig);
