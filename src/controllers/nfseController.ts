@@ -27,7 +27,7 @@ export default class NFSeController {
     getCancelledNFSe: GetCancelledNFSe,
     disableNfses: DisableNfses,
     getLastCursor: GetLastCursor,
-    updateLastCursor: UpdateLastCursor
+    updateLastCursor: UpdateLastCursor,
   ) {
     this.getNFSe = getNFSe;
     this.dateToSearch = dateToSearch?.trim() || undefined;
@@ -81,7 +81,7 @@ export default class NFSeController {
       tableName: "Cursor_NFSe_Canceladas_Report",
     };
     const lastZohoCursor: number | null = await this.getLastCursor.execute(
-      formReportNames.tableName
+      formReportNames.tableName,
     );
     const { cancelledIds, nextCursorQive } =
       await this.getCancelledNFSe.execute(lastZohoCursor);
@@ -90,7 +90,7 @@ export default class NFSeController {
 
     const disabledNfses = await this.disableNfses.execute(
       cancelledIds,
-      reportName
+      reportName,
     );
     // await this.updateLastCursor.execute(
     //   lastZohoCursor,

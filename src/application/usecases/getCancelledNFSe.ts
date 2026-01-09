@@ -24,15 +24,15 @@ export class GetCancelledNFSe {
   public async execute(cursor: number | null) {
     try {
       const content: QiveNfseEventsResponse = await this.qive.getCancelledNFSe(
-        cursor?.toString() || null
+        cursor?.toString() || null,
       );
       const cancelledIds = content.data.map((item) => item.id);
       if (content.count > 49) {
         console.error(
-          "Limite de notas canceladas excedido. Verifique o cursor inserido"
+          "Limite de notas canceladas excedido. Verifique o cursor inserido",
         );
         throw new Error(
-          "Limite de notas canceladas excedido. Verifique o cursor inserido"
+          "Limite de notas canceladas excedido. Verifique o cursor inserido",
         );
       }
       return {
