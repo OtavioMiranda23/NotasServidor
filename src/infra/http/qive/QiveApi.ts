@@ -155,13 +155,13 @@ export default class QiveApi {
         dataNFe.dateTo
       }&cursor=${
         dataNFe.cursor
-      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
+      }&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
     } else {
       targetUrl = `https://api.arquivei.com.br/${
         dataNFe.isV2 ? "v2" : "v1"
       }/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${
         dataNFe.dateTo
-      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
+      }&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
     }
 
     // if (dataNFe.cursor) {

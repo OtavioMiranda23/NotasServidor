@@ -2,6 +2,7 @@ import { z } from "zod";
 import GetNFSe from "../application/usecases/getNFSe";
 import { IBaseConfigApi } from "../infra/http/zoho/ZohoApi";
 import { DataNFe } from "../infra/http/qive/QiveApi";
+import { GetCancelledNFSe } from "../application/usecases/getCancelledNFSe";
 
 export const DataNFSeSchema = z.object({
   dateFrom: z.string(),
@@ -12,6 +13,7 @@ export const DataNFSeSchema = z.object({
 
 export default class NFSeController {
   private getNFSe: GetNFSe;
+  private getCancelledNFSe: GetCancelledNFSe;
   private dateToSearch: string | undefined;
   constructor(getNFSe: GetNFSe, dateToSearch: string | undefined) {
     this.getNFSe = getNFSe;
@@ -54,5 +56,13 @@ export default class NFSeController {
         },
       };
     }
+  }
+
+  public async cancelate(cursor: string | undefined | null) {
+    if (!cursor) {
+      console.error("Cursor inválido para buscar NFSe canceladas");
+      throw new Error("Cursor inválido para buscar NFSe canceladas");
+    }
+    const cancelledNotas = await this.getCancelledNFSe.execute(cursor);
   }
 }

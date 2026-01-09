@@ -50,5 +50,12 @@ class NFSeController {
             };
         }
     }
+    async cancelate(cursor) {
+        if (!cursor) {
+            console.error("Cursor inválido para buscar NFSe canceladas");
+            throw new Error("Cursor inválido para buscar NFSe canceladas");
+        }
+        const cancelledNotas = await this.getCancelledNFSe.execute(cursor);
+    }
 }
 exports.default = NFSeController;
