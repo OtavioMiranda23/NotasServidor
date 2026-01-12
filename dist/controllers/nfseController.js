@@ -55,7 +55,7 @@ class NFSeController {
             console.error("Cursor inválido para buscar NFSe canceladas");
             throw new Error("Cursor inválido para buscar NFSe canceladas");
         }
-        const cancelledNotas = await this.getCancelledNFSe.execute(cursor);
+        const { cancelledIds, nextCursor } = await this.getCancelledNFSe.execute(cursor);
     }
 }
 exports.default = NFSeController;

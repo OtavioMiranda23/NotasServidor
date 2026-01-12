@@ -63,6 +63,11 @@ export default class NFSeController {
       console.error("Cursor inválido para buscar NFSe canceladas");
       throw new Error("Cursor inválido para buscar NFSe canceladas");
     }
-    const cancelledNotas = await this.getCancelledNFSe.execute(cursor);
+    const { cancelledIds, nextCursor } = await this.getCancelledNFSe.execute(
+      cursor
+    );
+    //encontrar no zoho as notas canceladas
+    //mudar a flag desativado para SIM
+    //inserir cursor no zoho
   }
 }
