@@ -56,6 +56,7 @@ export type NotaNFSe = {
   Discriminacao?: string;
   ID?: string;
   IdNota?: string;
+  ItemListaServico?: string;
   Numero?: string;
   PrestadorCpnj?: string;
   PrestadorInscricaoMunicipal?: string;
@@ -70,7 +71,6 @@ export type NotaNFSe = {
   TomadorCnpj?: string;
   TomadorEndereco?: { zc_display_value: string };
   X509Certificate?: string;
-  [key: string]: unknown;
 };
 
 type NFSeImpostos = {
@@ -729,19 +729,49 @@ export default class CreateImage {
     }
   }
 
-  private mapearImpostosNFSe(jsonEntrada?: string): NFSeImpostos | null {
-    if (!jsonEntrada?.length) return null;
+  public mapearImpostosNFSe(servicoValores?: {
+    Aliquota: string | null;
+    ValorCsll: string | null;
+    ValorCofins: string | null;
+    ValorPis: string | null;
+    ValorServicos: string | null;
+    ValorInss: string | null;
+    ValorIss: string | null;
+    Ir: string | null;
+  }): {
+    aliquota: string | null;
+    csll: string | null;
+    cofins: string | null;
+    pis: string | null;
+    valorServico: string | null;
+    inss: string | null;
+    iss: string | null;
+    ir: string | null;
+  } | null {
+    console.log("Dados de entrada são:");
+    console.log(servicoValores);
+
+    if (!servicoValores) return null;
     try {
-      const json = JSON.parse(jsonEntrada);
-      return {
-        aliquota: json["Aliquota"] || null,
-        csll: json["ValorCsll"] || null,
-        cofins: json["ValorCofins"] || null,
-        pis: json["ValorPis"] || null,
-        valorServico: json["ValorServicos"] || null,
-        inss: json["ValorInss"] || null,
-        iss: json["ValorIss"] || null,
-      };
+      const aliquota = servicoValores["Aliquota"] || null;
+      const csll = servicoValores["ValorCsll"] || null;
+      const cofins = servicoValores["ValorCofins"] || null;
+      const pis = servicoValores["ValorPis"] || null;
+      const valorServico = servicoValores["ValorServicos"] || null;
+      const inss = servicoValores["ValorInss"] || null;
+      const iss = servicoValores["ValorIss"] || null;
+      let ir: string | null = null;
+
+      for (const chave of Object.keys(servicoValores) as Array<
+        keyof typeof servicoValores
+      >) {
+        if (String(chave).toLowerCase().includes("ir")) {
+          ir = servicoValores[chave];
+          break;
+        }
+      }
+
+      return { aliquota, csll, cofins, pis, valorServico, inss, iss, ir };
     } catch (error) {
       return null;
     }
@@ -763,8 +793,19 @@ export default class CreateImage {
       });
     };
 
-    const impostos = this.mapearImpostosNFSe(nota.ServicoValores);
-
+    const impostos = this.mapearImpostosNFSe(
+      nota.ServicoValores as unknown as {
+        Aliquota: string | null;
+        ValorCsll: string | null;
+        ValorCofins: string | null;
+        ValorPis: string | null;
+        ValorServicos: string | null;
+        ValorInss: string | null;
+        ValorIss: string | null;
+        Ir: string | null;
+      }
+    );
+    console.log("Impostos mapeados:", impostos);
     return `
     <html lang="pt-BR">
       <head>
@@ -1110,7 +1151,7 @@ export default class CreateImage {
           <!-- Valores da NFSe -->
           <div class="nfse-valores-fiscais">
             <div class="nfse-secao-cabecalho">Valor total do serviço: ${formatCurrency(
-              nota.BaseCalculo
+              impostos?.valorServico || undefined
             )}</div>
             <div class="nfse-valores-container">
               <div class="nfse-valor-fiscal">
@@ -1119,27 +1160,27 @@ export default class CreateImage {
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">ISS (R$)</span>
-                <span>${impostos?.iss || "-"}</span>
+                <span>${formatCurrency(impostos?.iss || undefined)}</span>
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">INSS (R$)</span>
-                <span>${impostos?.inss || "-"}</span>
+                <span>${formatCurrency(impostos?.inss || undefined)}</span>
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">IR (R$)</span>
-                <span>${impostos?.valorServico || "-"}</span>
+                <span>${formatCurrency(impostos?.ir || undefined)}</span>
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">CSLL (R$)</span>
-                <span>${impostos?.csll || "-"}</span>
+                <span>${formatCurrency(impostos?.csll || undefined)}</span>
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">COFINS (R$)</span>
-                <span>${impostos?.cofins || "-"}</span>
+                <span>${formatCurrency(impostos?.cofins || undefined)}</span>
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">PIS (R$)</span>
-                <span>${impostos?.pis || "-"}</span>
+                <span>${formatCurrency(impostos?.pis || undefined)}</span>
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">Base de Cálculo</span>
@@ -1151,6 +1192,9 @@ export default class CreateImage {
           <!-- Discriminação dos Serviços -->
           <div class="nfse-discriminacao">
             <div class="nfse-discriminacao-cabecalho">Discriminação dos Serviços</div>
+            <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${
+              nota.ItemListaServico
+            }</strong></div>
             <div class="nfse-discriminacao-conteudo">${this.safeValue(
               nota.Discriminacao
             )}</div>

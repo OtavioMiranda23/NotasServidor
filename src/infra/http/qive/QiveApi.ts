@@ -311,10 +311,8 @@ export default class QiveApi {
           this.#successConfig,
           attemptsNumber
         );
-
         const currentBatchIds = resZ.result.map((el: any) => el.data.ID);
         this.#idsFoundedNotas.nfse.idRecord.push(...currentBatchIds);
-
         const pdfNfseBuffers: Buffer<ArrayBufferLike>[] = [];
         for await (const notaNFSe of fieldsFormArr) {
           const pdfNfseBuffer = await this.#createImage.renderizarNotaNfse(
@@ -323,7 +321,6 @@ export default class QiveApi {
           //@ts-ignore
           pdfNfseBuffers.push(pdfNfseBuffer);
         }
-
         for (let i = 0; i < currentBatchIds.length; i++) {
           const params = {
             idCreatedRecord: currentBatchIds[i],
@@ -334,14 +331,12 @@ export default class QiveApi {
             buffer: pdfNfseBuffers[i],
           };
           const responseNfseUpload = await this.#zohoApi.uploadFile(params);
-
           if (responseNfseUpload?.code !== 3000) {
             console.error("Erro ao fazer upload do arquivo NFSe:");
             console.error(responseNfseUpload);
             throw new Error("Erro ao fazer upload do arquivo NFSe");
           }
         }
-
         await this.updateNota(idsParaAtualizarNotas, "nfse");
       } catch (e) {
         if (e instanceof InsertZohoError) {
