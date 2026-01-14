@@ -34,6 +34,8 @@ export interface IApiNota {
     blob?: Blob | Buffer | Uint8Array | Array<Blob | Buffer | Uint8Array>;
     filePath?: string;
   }): Promise<{ code: number }>;
+  findItemsByIds(reportName: string, ids: string[]): Promise<any[]>;
+  uploadItemsByIds(reportName: string, ids: string[]): Promise<any[]>;
 }
 
 const ZohoErrorSchema = z.object({
@@ -187,6 +189,44 @@ export default class ZohoApi implements IApiNota {
         throw error;
       }
     }
+  }
+
+  async findItemsByIds(reportName: string, ids: string[]) {
+    const requestOptions = {
+      headers: {
+        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    };
+    const results = [];
+    for await (const id of ids) {
+      const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+      const result = await this.#axios.get(url, requestOptions);
+      if (result.data.code === 3000) {
+        results.push(...result.data.data);
+      }
+    }
+    return results;
+  }
+
+  async uploadItemsByIds(reportName: string, ids: string[]) {
+    const requestOptions = {
+      headers: {
+        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    };
+    const results = [];
+    for await (const id of ids) {
+      const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+      const result = await this.#axios.patch(url, requestOptions);
+      if (result.data.code === 3000) {
+        results.push(...result.data.data);
+      }
+    }
+    return results;
   }
 
   async getRecordByField(

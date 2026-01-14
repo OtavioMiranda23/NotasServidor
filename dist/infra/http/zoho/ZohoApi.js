@@ -137,6 +137,42 @@ class ZohoApi {
             }
         }
     }
+    async findItemsByIds(reportName, ids) {
+        const requestOptions = {
+            headers: {
+                Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        };
+        const results = [];
+        for await (const id of ids) {
+            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+            const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
+            if (result.data.code === 3000) {
+                results.push(...result.data.data);
+            }
+        }
+        return results;
+    }
+    async uploadItemsByIds(reportName, ids) {
+        const requestOptions = {
+            headers: {
+                Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        };
+        const results = [];
+        for await (const id of ids) {
+            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+            const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").patch(url, requestOptions);
+            if (result.data.code === 3000) {
+                results.push(...result.data.data);
+            }
+        }
+        return results;
+    }
     async getRecordByField(reportName, field) {
         const requestOptions = {
             headers: {
