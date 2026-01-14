@@ -25,7 +25,7 @@ export default class DisableNfses {
       }
       const nfesFindedToDisable = await this.zoho.findAllItems(
         reportName,
-        `(IdNota=="${idNfse}")`
+        `(IdNota=="${idNfse}")`,
       );
     }
     // const idsToDisable: string[] = nfesFindedToDisable.map(
@@ -46,13 +46,13 @@ export default class DisableNfses {
   private async cancelNfse(
     idsZohoToDisable: string[],
     reportName: string,
-    payload: { data: { [key: string]: string } }
+    payload: { data: { [key: string]: string } },
   ) {
     // const payload = { data: { Desativado: "SIM" } };
     const successItemsUpdate = await this.zoho.updateItemsByIds(
       reportName,
       payload,
-      idsZohoToDisable
+      idsZohoToDisable,
     );
 
     if (successItemsUpdate.length !== idsZohoToDisable.length) {
@@ -72,7 +72,7 @@ export default class DisableNfses {
       enviadoEnvioNotas: string;
     }[],
     reportName: string,
-    idsToDisable: string[]
+    idsToDisable: string[],
   ) {
     if (pagamentosFounded.length === 0) {
       console.log("Nenhum pagamento encontrado para as NFSes informadas.");
@@ -110,7 +110,7 @@ export default class DisableNfses {
 
         const validPagamentos = pagamentos.filter(
           (
-            p
+            p,
           ): p is Pagamento & {
             situacao_pagamento: string;
             pagamento_ja_realizado: string;
@@ -120,7 +120,7 @@ export default class DisableNfses {
             typeof p.situacao_pagamento === "string" &&
             typeof p.pagamento_ja_realizado === "string" &&
             typeof p.pendente === "string" &&
-            typeof p.Enviado_ao_Envio_Notas === "string"
+            typeof p.Enviado_ao_Envio_Notas === "string",
         );
 
         pagamentosFounded.push(
@@ -131,7 +131,7 @@ export default class DisableNfses {
             pagamento_ja_realizado: p.pagamento_ja_realizado,
             pendente: p.pendente,
             enviadoEnvioNotas: p.Enviado_ao_Envio_Notas,
-          }))
+          })),
         );
       }
     }

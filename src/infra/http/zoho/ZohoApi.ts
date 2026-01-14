@@ -39,11 +39,11 @@ export interface IApiNota {
   updateItemsByIds(
     reportName: string,
     content: { data: { [key: string]: string } },
-    ids: string[]
+    ids: string[],
   ): Promise<string[]>;
   findAllItems(
     reportName: string,
-    criteria?: string
+    criteria?: string,
   ): Promise<{ success: boolean; data: unknown[] }>;
 }
 
@@ -138,7 +138,7 @@ export default class ZohoApi implements IApiNota {
 
   async findAllItems(
     reportName: string,
-    criteria?: string
+    criteria?: string,
   ): Promise<{ success: boolean; data: unknown[] }> {
     const requestOptions = {
       headers: {
@@ -235,7 +235,6 @@ export default class ZohoApi implements IApiNota {
     const results = [];
     for await (const id of ids) {
       const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
-
       const result = await this.#axios.get(url, requestOptions);
       if (result.data.code === 3000) {
         results.push(...result.data.data);
@@ -247,7 +246,7 @@ export default class ZohoApi implements IApiNota {
   async updateItemsByIds(
     reportName: string,
     content: { data: { [key: string]: string } },
-    ids: string[]
+    ids: string[],
   ) {
     const requestOptions = {
       headers: {
