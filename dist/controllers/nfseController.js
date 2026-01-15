@@ -9,9 +9,11 @@ exports.DataNFSeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFSeController {
-    constructor(getNFSe, dateToSearch) {
+    constructor(getNFSe, dateToSearch, getCancelledNFSe, disableNfses) {
         this.getNFSe = getNFSe;
         this.dateToSearch = dateToSearch?.trim() || undefined;
+        this.getCancelledNFSe = getCancelledNFSe;
+        this.disableNfses = disableNfses;
     }
     async createNFSe(errorConfig) {
         try {
@@ -50,12 +52,13 @@ class NFSeController {
             };
         }
     }
-    async cancelate(cursor) {
+    async updateCancelledNFSe(cursor) {
         if (!cursor) {
             console.error("Cursor inválido para buscar NFSe canceladas");
             throw new Error("Cursor inválido para buscar NFSe canceladas");
         }
         const { cancelledIds, nextCursor } = await this.getCancelledNFSe.execute(cursor);
+        const successItemsUpdate = await this.disableNfses.execute(cancelledIds);
     }
 }
 exports.default = NFSeController;

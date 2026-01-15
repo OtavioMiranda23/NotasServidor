@@ -3,6 +3,7 @@ import GetNFSe from "../application/usecases/getNFSe";
 import { IBaseConfigApi } from "../infra/http/zoho/ZohoApi";
 import { DataNFe } from "../infra/http/qive/QiveApi";
 import { GetCancelledNFSe } from "../application/usecases/getCancelledNFSe";
+import DisableNfses from "../application/usecases/disableNfses";
 
 export const DataNFSeSchema = z.object({
   dateFrom: z.string(),
@@ -15,9 +16,17 @@ export default class NFSeController {
   private getNFSe: GetNFSe;
   private getCancelledNFSe: GetCancelledNFSe;
   private dateToSearch: string | undefined;
-  constructor(getNFSe: GetNFSe, dateToSearch: string | undefined) {
+  private disableNfses: DisableNfses;
+  constructor(
+    getNFSe: GetNFSe,
+    dateToSearch: string | undefined,
+    getCancelledNFSe: GetCancelledNFSe,
+    disableNfses: DisableNfses
+  ) {
     this.getNFSe = getNFSe;
     this.dateToSearch = dateToSearch?.trim() || undefined;
+    this.getCancelledNFSe = getCancelledNFSe;
+    this.disableNfses = disableNfses;
   }
 
   public async createNFSe(errorConfig: IBaseConfigApi) {
@@ -58,7 +67,7 @@ export default class NFSeController {
     }
   }
 
-  public async cancelate(cursor: string | undefined | null) {
+  public async updateCancelledNFSe(cursor: string | undefined | null) {
     if (!cursor) {
       console.error("Cursor inválido para buscar NFSe canceladas");
       throw new Error("Cursor inválido para buscar NFSe canceladas");
@@ -66,6 +75,7 @@ export default class NFSeController {
     const { cancelledIds, nextCursor } = await this.getCancelledNFSe.execute(
       cursor
     );
+    const successItemsUpdate = await this.disableNfses.execute(cancelledIds);
     //encontrar no zoho as notas canceladas
     //mudar a flag desativado para SIM
     //inserir cursor no zoho

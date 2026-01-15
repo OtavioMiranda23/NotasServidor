@@ -35,7 +35,11 @@ export interface IApiNota {
     filePath?: string;
   }): Promise<{ code: number }>;
   findItemsByIds(reportName: string, ids: string[]): Promise<any[]>;
-  uploadItemsByIds(reportName: string, ids: string[]): Promise<any[]>;
+  updateItemsByIds(
+    reportName: string,
+    content: { data: { [key: string]: string } },
+    ids: string[]
+  ): Promise<string[]>;
 }
 
 const ZohoErrorSchema = z.object({
@@ -210,7 +214,11 @@ export default class ZohoApi implements IApiNota {
     return results;
   }
 
-  async uploadItemsByIds(reportName: string, ids: string[]) {
+  async updateItemsByIds(
+    reportName: string,
+    content: { data: { [key: string]: string } },
+    ids: string[]
+  ) {
     const requestOptions = {
       headers: {
         Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
@@ -218,12 +226,17 @@ export default class ZohoApi implements IApiNota {
         Accept: "application/json",
       },
     };
-    const results = [];
+    const results: string[] = [];
     for await (const id of ids) {
       const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
-      const result = await this.#axios.patch(url, requestOptions);
-      if (result.data.code === 3000) {
-        results.push(...result.data.data);
+      const result = await this.#axios.patch(url, content, requestOptions);
+      const data = result.data as {
+        code: number;
+        data: { ID: string };
+        message: string;
+      };
+      if (data.code === 3000) {
+        results.push(data.data.ID);
       }
     }
     return results;
