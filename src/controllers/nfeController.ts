@@ -20,9 +20,13 @@ export default class NFeController {
 
   public async createNFe(errorConfig: IBaseConfigApi) {
     try {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      const [yesterdayDate, __] = yesterday.toISOString().split("T");
       const [currentDate, _] = new Date().toISOString().split("T");
       const dataNFe = {
-        dateFrom: this.dateToSearch || currentDate,
+        dateFrom: this.dateToSearch || yesterdayDate,
         dateTo: this.dateToSearch || currentDate,
         cursor: "",
         isV2: false,
