@@ -10,6 +10,12 @@ const getNFe_1 = __importDefault(require("./application/usecases/getNFe"));
 const getNFSe_1 = __importDefault(require("./application/usecases/getNFSe"));
 const nfeController_1 = __importDefault(require("./controllers/nfeController"));
 const nfseController_1 = __importDefault(require("./controllers/nfseController"));
+const disableNfses_1 = __importDefault(require("./application/usecases/disableNfses"));
+const getCancelledNFSe_1 = require("./application/usecases/getCancelledNFSe");
+const QiveApi_1 = __importDefault(require("./infra/http/qive/QiveApi"));
+const createImage_1 = __importDefault(require("./application/usecases/createImage"));
+const updateLastCursor_1 = require("./application/usecases/updateLastCursor");
+const getLastCursor_1 = require("./application/usecases/getLastCursor");
 const baseDir = process.pkg
     ? path_1.default.dirname(process.execPath)
     : process.cwd();
@@ -85,15 +91,21 @@ async function main() {
         }
         console.log(credentialsZoho, successNFeConfig, successNFSeConfig, credentialsQive, errorNFeConfig, errorNFSeConfig, { dateToSearch });
         console.log("\nInicializando ZohoApi...");
+        const createImage = new createImage_1.default();
         const zohoApi = await ZohoApi_1.default.init(credentialsZoho);
+        const qive = new QiveApi_1.default(zohoApi, createImage, credentialsQive, successNFeConfig);
         console.log("✓ ZohoApi inicializada com sucesso");
         console.log("\nCriando use cases...");
         const getNFe = new getNFe_1.default(zohoApi, credentialsQive, successNFeConfig);
         const getNFSe = new getNFSe_1.default(zohoApi, credentialsQive, successNFSeConfig);
+        const disableNfses = new disableNfses_1.default(zohoApi);
+        const getCancelledNFSe = new getCancelledNFSe_1.GetCancelledNFSe(qive);
+        const getLastCursor = new getLastCursor_1.GetLastCursor(zohoApi);
+        const updateLastCursor = new updateLastCursor_1.UpdateLastCursor(zohoApi);
         console.log("✓ Use cases criados");
         console.log("\nCriando controllers...");
         const nfeController = new nfeController_1.default(getNFe, dateToSearch);
-        const nfseController = new nfseController_1.default(getNFSe, dateToSearch);
+        const nfseController = new nfseController_1.default(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor);
         console.log("✓ Controllers criados");
         console.log(dateToSearch);
         console.log("\n=== PROCESSANDO NFe ===");

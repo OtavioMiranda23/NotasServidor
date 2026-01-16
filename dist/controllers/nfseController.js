@@ -9,11 +9,13 @@ exports.DataNFSeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFSeController {
-    constructor(getNFSe, dateToSearch, getCancelledNFSe, disableNfses) {
+    constructor(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor) {
         this.getNFSe = getNFSe;
         this.dateToSearch = dateToSearch?.trim() || undefined;
         this.getCancelledNFSe = getCancelledNFSe;
         this.disableNfses = disableNfses;
+        this.getLastCursor = getLastCursor;
+        this.updateLastCursor = updateLastCursor;
     }
     async createNFSe(errorConfig) {
         try {
@@ -52,13 +54,15 @@ class NFSeController {
             };
         }
     }
-    async updateCancelledNFSe(cursor) {
-        if (!cursor) {
-            console.error("Cursor inválido para buscar NFSe canceladas");
-            throw new Error("Cursor inválido para buscar NFSe canceladas");
-        }
-        const { cancelledIds, nextCursor } = await this.getCancelledNFSe.execute(cursor);
-        const successItemsUpdate = await this.disableNfses.execute(cancelledIds);
+    async updateCancelledNFSe() {
+        const formReportNames = {
+            formName: "Cursor_NFSe_Canceladas",
+            tableName: "Cursor_NFSe_Canceladas_Report",
+        };
+        const lastZohoCursor = await this.getLastCursor.execute(formReportNames.tableName);
+        const { cancelledIds, nextCursorQive } = await this.getCancelledNFSe.execute(lastZohoCursor);
+        const disabledNfses = await this.disableNfses.execute(cancelledIds);
+        await this.updateLastCursor.execute(lastZohoCursor, nextCursorQive, formReportNames);
     }
 }
 exports.default = NFSeController;

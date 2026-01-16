@@ -15,6 +15,7 @@ import { log } from "node:console";
 // import htmlPdf from "html-pdf-node";
 
 export interface IBaseConfigApi {
+  //tableName é o nome do relatório no zoho
   tableName: string;
   formName: string;
 }
@@ -40,6 +41,9 @@ export interface IApiNota {
     content: { data: { [key: string]: string } },
     ids: string[]
   ): Promise<string[]>;
+  findAllItems(
+    reportName: string
+  ): Promise<{ success: boolean; data: unknown[] }>;
 }
 
 const ZohoErrorSchema = z.object({
@@ -129,6 +133,25 @@ export default class ZohoApi implements IApiNota {
       return false;
     }
     return true;
+  }
+
+  async findAllItems(
+    reportName: string
+  ): Promise<{ success: boolean; data: unknown[] }> {
+    const requestOptions = {
+      headers: {
+        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    };
+    const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}`;
+    const result = await this.#axios.get(url, requestOptions);
+    const data = result.data;
+    if (data.code !== 3000) {
+      return { success: false, data: data };
+    }
+    return { success: true, data: data.data };
   }
 
   async deleteAllRecordsNFeTest(query: string) {

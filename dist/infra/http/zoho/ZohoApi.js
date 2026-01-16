@@ -85,6 +85,22 @@ class ZohoApi {
         }
         return true;
     }
+    async findAllItems(reportName) {
+        const requestOptions = {
+            headers: {
+                Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        };
+        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}`;
+        const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
+        const data = result.data;
+        if (data.code !== 3000) {
+            return { success: false, data: data };
+        }
+        return { success: true, data: data.data };
+    }
     async deleteAllRecordsNFeTest(query) {
         const requestOptions = {
             headers: {

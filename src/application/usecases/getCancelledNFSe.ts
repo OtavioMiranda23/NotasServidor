@@ -1,5 +1,5 @@
 import axios from "axios";
-import { CredentialsQive } from "../../infra/http/qive/QiveApi";
+import QiveApi, { CredentialsQive } from "../../infra/http/qive/QiveApi";
 export type QiveNfseEventsResponse = {
   status: {
     code: number;
@@ -20,22 +20,12 @@ export type QiveNfseEventsResponse = {
 };
 
 export class GetCancelledNFSe {
-  public constructor(readonly credentials: CredentialsQive) {}
-  public async execute(cursor: string) {
+  public constructor(private qive: QiveApi) {}
+  public async execute(cursor: number | null) {
     try {
-      //fazer a chamada para a api da qive
-      const url = `https://api.arquivei.com.br/v1/nfse/events?type[]=101101&cursor=${cursor}`;
-      const headers = {
-        "X-API-ID": this.credentials.apiId,
-        "X-API-KEY": this.credentials.apiKey,
-      };
-      const res = await axios.get(url, { headers });
-      const data = res.data;
-      if (data.status && data.status.code && data.status.code !== 200) {
-        console.error("Erro ao buscar nfse canceladas:", data.message);
-        throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
-      }
-      const content: QiveNfseEventsResponse = data;
+      const content: QiveNfseEventsResponse = await this.qive.getCancelledNFSe(
+        cursor?.toString() || null
+      );
       const cancelledIds = content.data.map((item) => item.id);
       if (content.count > 49) {
         console.error(
@@ -45,7 +35,10 @@ export class GetCancelledNFSe {
           "Limite de notas canceladas excedido. Verifique o cursor inserido"
         );
       }
-      return { cancelledIds, nextCursor: this.extractCursorFromUrl(content) };
+      return {
+        cancelledIds,
+        nextCursorQive: this.extractCursorFromUrl(content),
+      };
     } catch (error) {
       console.error("Erro ao buscar nfse canceladas:", error);
       throw new Error("Erro ao buscar nfse canceladas");

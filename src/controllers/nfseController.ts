@@ -4,6 +4,8 @@ import { IBaseConfigApi } from "../infra/http/zoho/ZohoApi";
 import { DataNFe } from "../infra/http/qive/QiveApi";
 import { GetCancelledNFSe } from "../application/usecases/getCancelledNFSe";
 import DisableNfses from "../application/usecases/disableNfses";
+import { UpdateLastCursor } from "../application/usecases/updateLastCursor";
+import { GetLastCursor } from "../application/usecases/getLastCursor";
 
 export const DataNFSeSchema = z.object({
   dateFrom: z.string(),
@@ -17,16 +19,22 @@ export default class NFSeController {
   private getCancelledNFSe: GetCancelledNFSe;
   private dateToSearch: string | undefined;
   private disableNfses: DisableNfses;
+  private getLastCursor: GetLastCursor;
+  private updateLastCursor: UpdateLastCursor;
   constructor(
     getNFSe: GetNFSe,
     dateToSearch: string | undefined,
     getCancelledNFSe: GetCancelledNFSe,
-    disableNfses: DisableNfses
+    disableNfses: DisableNfses,
+    getLastCursor: GetLastCursor,
+    updateLastCursor: UpdateLastCursor
   ) {
     this.getNFSe = getNFSe;
     this.dateToSearch = dateToSearch?.trim() || undefined;
     this.getCancelledNFSe = getCancelledNFSe;
     this.disableNfses = disableNfses;
+    this.getLastCursor = getLastCursor;
+    this.updateLastCursor = updateLastCursor;
   }
 
   public async createNFSe(errorConfig: IBaseConfigApi) {
@@ -67,17 +75,22 @@ export default class NFSeController {
     }
   }
 
-  public async updateCancelledNFSe(cursor: string | undefined | null) {
-    if (!cursor) {
-      console.error("Cursor inválido para buscar NFSe canceladas");
-      throw new Error("Cursor inválido para buscar NFSe canceladas");
-    }
-    const { cancelledIds, nextCursor } = await this.getCancelledNFSe.execute(
-      cursor
+  public async updateCancelledNFSe() {
+    const formReportNames: IBaseConfigApi = {
+      formName: "Cursor_NFSe_Canceladas",
+      tableName: "Cursor_NFSe_Canceladas_Report",
+    };
+    const lastZohoCursor: number | null = await this.getLastCursor.execute(
+      formReportNames.tableName
     );
-    const successItemsUpdate = await this.disableNfses.execute(cancelledIds);
-    //encontrar no zoho as notas canceladas
-    //mudar a flag desativado para SIM
-    //inserir cursor no zoho
+    const { cancelledIds, nextCursorQive } =
+      await this.getCancelledNFSe.execute(lastZohoCursor);
+    //verificar se o pagamento está pendente
+    const disabledNfses = await this.disableNfses.execute(cancelledIds);
+    await this.updateLastCursor.execute(
+      lastZohoCursor,
+      nextCursorQive,
+      formReportNames
+    );
   }
 }

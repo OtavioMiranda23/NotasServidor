@@ -8,6 +8,7 @@ import formatDateOnlyDDMMMYYYY from "../../utils/formatDateOnlyDDMMMYYYY";
 import CreateImage from "../../../application/usecases/createImage";
 import path from "node:path";
 import { buffer } from "node:stream/consumers";
+import { QiveNfseEventsResponse } from "../../../application/usecases/getCancelledNFSe";
 
 type FoundedNotas = {
   nfe: { idNota: string[]; idRecord: string[] };
@@ -657,5 +658,22 @@ export default class QiveApi {
         subPags: QiveApi.getSubPags(xml.pag),
       };
     });
+  }
+
+  async getCancelledNFSe(cursor: string | null) {
+    const url = `https://api.arquivei.com.br/v1/nfse/events?type[]=101101${
+      cursor ? `&cursor=${cursor}` : ""
+    }`;
+    const headers = {
+      "X-API-ID": this.#credentials.apiId,
+      "X-API-KEY": this.#credentials.apiKey,
+    };
+    const res = await axios.get(url, { headers });
+    const data = res.data;
+    if (data.status && data.status.code && data.status.code !== 200) {
+      console.error("Erro ao buscar nfse canceladas:", data.message);
+      throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
+    }
+    return data.data as QiveNfseEventsResponse;
   }
 }

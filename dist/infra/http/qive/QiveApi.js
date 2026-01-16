@@ -526,6 +526,20 @@ class QiveApi {
             };
         });
     }
+    async getCancelledNFSe(cursor) {
+        const url = `https://api.arquivei.com.br/v1/nfse/events?type[]=101101${cursor ? `&cursor=${cursor}` : ""}`;
+        const headers = {
+            "X-API-ID": __classPrivateFieldGet(this, _QiveApi_credentials, "f").apiId,
+            "X-API-KEY": __classPrivateFieldGet(this, _QiveApi_credentials, "f").apiKey,
+        };
+        const res = await axios_1.default.get(url, { headers });
+        const data = res.data;
+        if (data.status && data.status.code && data.status.code !== 200) {
+            console.error("Erro ao buscar nfse canceladas:", data.message);
+            throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
+        }
+        return data.data;
+    }
 }
 _QiveApi_zohoApi = new WeakMap(), _QiveApi_createImage = new WeakMap(), _QiveApi_axios = new WeakMap(), _QiveApi_idsFoundedNotas = new WeakMap(), _QiveApi_credentials = new WeakMap(), _QiveApi_successConfig = new WeakMap();
 exports.default = QiveApi;
