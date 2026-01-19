@@ -538,7 +538,7 @@ class QiveApi {
             console.error("Erro ao buscar nfse canceladas:", data.message);
             throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
         }
-        return data.data;
+        return data;
     }
 }
 _QiveApi_zohoApi = new WeakMap(), _QiveApi_createImage = new WeakMap(), _QiveApi_axios = new WeakMap(), _QiveApi_idsFoundedNotas = new WeakMap(), _QiveApi_credentials = new WeakMap(), _QiveApi_successConfig = new WeakMap();

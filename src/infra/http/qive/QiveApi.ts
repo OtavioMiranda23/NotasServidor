@@ -674,6 +674,6 @@ export default class QiveApi {
       console.error("Erro ao buscar nfse canceladas:", data.message);
       throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
     }
-    return data.data as QiveNfseEventsResponse;
+    return data as QiveNfseEventsResponse;
   }
 }

@@ -85,12 +85,17 @@ export default class NFSeController {
     );
     const { cancelledIds, nextCursorQive } =
       await this.getCancelledNFSe.execute(lastZohoCursor);
-    //verificar se o pagamento está pendente
-    const disabledNfses = await this.disableNfses.execute(cancelledIds);
-    await this.updateLastCursor.execute(
-      lastZohoCursor,
-      nextCursorQive,
-      formReportNames
+    // //verificar se o pagamento está pendente
+    const reportName = "Copy_of_NFSe_Report";
+
+    const disabledNfses = await this.disableNfses.execute(
+      cancelledIds,
+      reportName
     );
+    // await this.updateLastCursor.execute(
+    //   lastZohoCursor,
+    //   nextCursorQive,
+    //   formReportNames
+    // );
   }
 }

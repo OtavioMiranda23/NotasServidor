@@ -85,7 +85,7 @@ class ZohoApi {
         }
         return true;
     }
-    async findAllItems(reportName) {
+    async findAllItems(reportName, criteria) {
         const requestOptions = {
             headers: {
                 Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
@@ -93,9 +93,11 @@ class ZohoApi {
                 Accept: "application/json",
             },
         };
-        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}`;
+        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}${criteria ? `?criteria=${criteria}` : ""}`;
+        console.log({ url });
         const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
         const data = result.data;
+        console.log({ data });
         if (data.code !== 3000) {
             return { success: false, data: data };
         }

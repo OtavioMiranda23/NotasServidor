@@ -61,8 +61,8 @@ class NFSeController {
         };
         const lastZohoCursor = await this.getLastCursor.execute(formReportNames.tableName);
         const { cancelledIds, nextCursorQive } = await this.getCancelledNFSe.execute(lastZohoCursor);
-        const disabledNfses = await this.disableNfses.execute(cancelledIds);
-        await this.updateLastCursor.execute(lastZohoCursor, nextCursorQive, formReportNames);
+        const reportName = "Copy_of_NFSe_Report";
+        const disabledNfses = await this.disableNfses.execute(cancelledIds, reportName);
     }
 }
 exports.default = NFSeController;

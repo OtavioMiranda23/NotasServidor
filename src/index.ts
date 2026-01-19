@@ -168,27 +168,29 @@ async function main() {
 
     console.log(dateToSearch);
 
-    console.log("\n=== PROCESSANDO NFe ===");
-    const nfeResult = await nfeController.createNFe(errorNFeConfig);
+    // console.log("\n=== PROCESSANDO NFe ===");
+    // const nfeResult = await nfeController.createNFe(errorNFeConfig);
 
-    if (nfeResult.status === 200) {
-      console.log("✓ NFe processada com sucesso:");
-      console.log(JSON.stringify(nfeResult.data, null, 2));
-    } else {
-      console.error("✗ Erro ao processar NFe:");
-      console.error(JSON.stringify(nfeResult.error, null, 2));
-    }
+    // if (nfeResult.status === 200) {
+    //   console.log("✓ NFe processada com sucesso:");
+    //   console.log(JSON.stringify(nfeResult.data, null, 2));
+    // } else {
+    //   console.error("✗ Erro ao processar NFe:");
+    //   console.error(JSON.stringify(nfeResult.error, null, 2));
+    // }
 
     console.log("\n=== PROCESSANDO NFSe ===");
-    const nfseResult = await nfseController.createNFSe(errorNFSeConfig);
+    //TODO: TROCARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+    // const nfseResult = await nfseController.createNFSe(errorNFSeConfig);
+    const nfseResult = await nfseController.updateCancelledNFSe();
 
-    if (nfseResult.status === 200) {
-      console.log("✓ NFSe processada com sucesso:");
-      console.log(JSON.stringify(nfseResult.data, null, 2));
-    } else {
-      console.error("✗ Erro ao processar NFSe:");
-      console.error(JSON.stringify(nfseResult.error, null, 2));
-    }
+    // if (nfseResult.status === 200) {
+    //   console.log("✓ NFSe processada com sucesso:");
+    //   console.log(JSON.stringify(nfseResult.data, null, 2));
+    // } else {
+    //   console.error("✗ Erro ao processar NFSe:");
+    //   console.error(JSON.stringify(nfseResult.error, null, 2));
+    // }
 
     console.log("\n✓ PROCESSAMENTO CONCLUÍDO COM SUCESSO!");
   } catch (error: any) {

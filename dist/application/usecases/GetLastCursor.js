@@ -7,10 +7,7 @@ class GetLastCursor {
     }
     async execute(reportName) {
         const allCursors = await this.zoho.findAllItems(reportName);
-        if (!allCursors.success) {
-            return null;
-        }
-        if (allCursors.data.length === 0) {
+        if (!allCursors.success || allCursors.data.length === 0) {
             return null;
         }
         const first = allCursors.data[0];
