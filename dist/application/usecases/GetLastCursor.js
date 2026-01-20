@@ -5,8 +5,8 @@ class GetLastCursor {
     constructor(zoho) {
         this.zoho = zoho;
     }
-    async execute(reportName) {
-        const allCursors = await this.zoho.findAllItems(reportName);
+    async execute(linksNames) {
+        const allCursors = await this.zoho.findAllItems(linksNames);
         if (!allCursors.success || allCursors.data.length === 0) {
             return null;
         }

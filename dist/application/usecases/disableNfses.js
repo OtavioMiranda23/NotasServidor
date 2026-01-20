@@ -4,17 +4,38 @@ class DisableNfses {
     constructor(zoho) {
         this.zoho = zoho;
     }
-    async execute(IdsNfsesRequest, reportName) {
+    async execute(IdsNfsesRequest, linkNames, configNotasCanceladas) {
+        const idsNfseFoundedInZohoToCancel = [];
         let c = 0;
         console.log({ IdsNfsesRequest });
         for await (const idNfse of IdsNfsesRequest) {
             c++;
             console.log(c);
-            if (c % 5 === 0) {
-                await new Promise((resolve) => setTimeout(resolve, 10000));
+            const allNfesFindedToDisable = await this.zoho.findAllItems(linkNames, `(IdNota=="${idNfse}")`);
+            if (allNfesFindedToDisable.success) {
+                const content = {
+                    data: {
+                        idNota: idNfse,
+                        tipoNota: "nfse",
+                        encontrada: "SIM",
+                    },
+                };
+                await this.zoho.saveRecord(content, configNotasCanceladas);
+                idsNfseFoundedInZohoToCancel.push(idNfse);
             }
-            const nfesFindedToDisable = await this.zoho.findAllItems(reportName, `(IdNota=="${idNfse}")`);
+            else {
+                const content = {
+                    data: {
+                        idNota: idNfse,
+                        tipoNota: "nfse",
+                        encontrada: "NAO",
+                    },
+                };
+                await this.zoho.saveRecord(content, configNotasCanceladas);
+            }
         }
+        const pagamentosFounded = await this.getPagamentosToDisable(idsNfseFoundedInZohoToCancel, linkNames);
+        console.log({ pagamentosFounded });
     }
     async cancelNfse(idsZohoToDisable, reportName, payload) {
         const successItemsUpdate = await this.zoho.updateItemsByIds(reportName, payload, idsZohoToDisable);
@@ -33,11 +54,11 @@ class DisableNfses {
         console.log("Pagamentos encontrados:", pagamentosFounded);
         return;
     }
-    async parsePagamento(idsToDisable, reportName) {
+    async getPagamentosToDisable(idsToDisable, linkNames) {
         let pagamentosFounded = [];
         for await (const id of idsToDisable) {
             const criteria = `(nfseIds.IdNota.contains(${id}))`;
-            const findedItems = await this.zoho.findAllItems(reportName, criteria);
+            const findedItems = await this.zoho.findAllItems(linkNames, criteria);
             if (findedItems.success) {
                 const pagamentos = findedItems.data;
                 const validPagamentos = pagamentos.filter((p) => typeof p.situacao_pagamento === "string" &&

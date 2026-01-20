@@ -1,10 +1,12 @@
-import { IApiNota } from "../../infra/http/zoho/ZohoApi";
+import { IApiNota, IZohoLinksNames } from "../../infra/http/zoho/ZohoApi";
 
 export class GetLastCursor {
   constructor(private readonly zoho: IApiNota) {}
 
-  async execute(reportName: string): Promise<number | null> {
-    const allCursors = await this.zoho.findAllItems(reportName);
+  async execute(
+    linksNames: Omit<IZohoLinksNames, "formName">,
+  ): Promise<number | null> {
+    const allCursors = await this.zoho.findAllItems(linksNames);
     if (!allCursors.success || allCursors.data.length === 0) {
       return null;
     }

@@ -55,14 +55,21 @@ class NFSeController {
         }
     }
     async updateCancelledNFSe() {
-        const formReportNames = {
-            formName: "Cursor_NFSe_Canceladas",
-            tableName: "Cursor_NFSe_Canceladas_Report",
+        const linksNames = {
+            appName: "base-notas-qive",
+            reportName: "Cursor_NFSe_Canceladas_Report",
         };
-        const lastZohoCursor = await this.getLastCursor.execute(formReportNames.tableName);
+        const lastZohoCursor = await this.getLastCursor.execute(linksNames);
         const { cancelledIds, nextCursorQive } = await this.getCancelledNFSe.execute(lastZohoCursor);
-        const reportName = "Copy_of_NFSe_Report";
-        const disabledNfses = await this.disableNfses.execute(cancelledIds, reportName);
+        const linkNamesToDisable = {
+            appName: "base-notas-qive",
+            reportName: "Copy_of_NFSe_Report",
+        };
+        const configNotasCanceladas = {
+            appName: "base-notas-qive",
+            formName: "Historico_Notas_Canceladas",
+        };
+        const disabledNfses = await this.disableNfses.execute(cancelledIds, linkNamesToDisable, configNotasCanceladas);
     }
 }
 exports.default = NFSeController;

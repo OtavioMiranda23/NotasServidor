@@ -1,4 +1,8 @@
-import { IApiNota } from "../../infra/http/zoho/ZohoApi";
+import {
+  IApiNota,
+  IBaseConfigApi,
+  IZohoLinksNames,
+} from "../../infra/http/zoho/ZohoApi";
 
 type Pagamento = {
   ID: string;
@@ -10,31 +14,47 @@ type Pagamento = {
 
 export default class DisableNfses {
   constructor(private readonly zoho: IApiNota) {}
-  public async execute(IdsNfsesRequest: string[], reportName: string) {
-    //procurar no relatorio de nfse os ids das notas
-    //passar a lista de ids nfse ou chamar um por um em um loop
+  public async execute(
+    IdsNfsesRequest: string[],
+    linkNames: Omit<IZohoLinksNames, "formName">,
+    configNotasCanceladas: Omit<IZohoLinksNames, "reportName">,
+  ) {
+    const idsNfseFoundedInZohoToCancel: string[] = [];
     let c = 0;
-    //colocar limite de 10 iteraçoes por vez
     console.log({ IdsNfsesRequest });
-
     for await (const idNfse of IdsNfsesRequest) {
       c++;
       console.log(c);
-      if (c % 5 === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-      }
-      const nfesFindedToDisable = await this.zoho.findAllItems(
-        reportName,
+      const allNfesFindedToDisable = await this.zoho.findAllItems(
+        linkNames,
         `(IdNota=="${idNfse}")`,
       );
+      if (allNfesFindedToDisable.success) {
+        const content = {
+          data: {
+            idNota: idNfse,
+            tipoNota: "nfse",
+            encontrada: "SIM",
+          },
+        };
+        await this.zoho.saveRecord(content, configNotasCanceladas);
+        idsNfseFoundedInZohoToCancel.push(idNfse);
+      } else {
+        const content = {
+          data: {
+            idNota: idNfse,
+            tipoNota: "nfse",
+            encontrada: "NAO",
+          },
+        };
+        await this.zoho.saveRecord(content, configNotasCanceladas);
+      }
     }
-    // const idsToDisable: string[] = nfesFindedToDisable.map(
-    //   (nfse) => nfse["ID"] as string
-    // );
-    // const pagamentosFounded = await this.parsePagamento(
-    //   idsToDisable,
-    //   reportName
-    // );
+    const pagamentosFounded = await this.getPagamentosToDisable(
+      idsNfseFoundedInZohoToCancel,
+      linkNames,
+    );
+    console.log({ pagamentosFounded });
     // const successItemsUpdated = await this.strategyToDisable(
     //   pagamentosFounded,
     //   reportName,
@@ -93,7 +113,10 @@ export default class DisableNfses {
     // });
   }
 
-  private async parsePagamento(idsToDisable: string[], reportName: string) {
+  private async getPagamentosToDisable(
+    idsToDisable: string[],
+    linkNames: Omit<IZohoLinksNames, "formName">,
+  ) {
     let pagamentosFounded: {
       idNota: string;
       idZoho: string;
@@ -104,7 +127,7 @@ export default class DisableNfses {
     }[] = [];
     for await (const id of idsToDisable) {
       const criteria = `(nfseIds.IdNota.contains(${id}))`;
-      const findedItems = await this.zoho.findAllItems(reportName, criteria);
+      const findedItems = await this.zoho.findAllItems(linkNames, criteria);
       if (findedItems.success) {
         const pagamentos = findedItems.data as Pagamento[];
 
