@@ -20,7 +20,6 @@ type FoundedNfseToCancel = {
 
 export default class DisableNfses {
   constructor(private readonly zoho: IApiNota) {}
-
   public async execute(
     IdsNfsesRequest: string[],
     linkNames: Omit<IZohoLinksNames, "formName">,
