@@ -175,7 +175,6 @@ export default class DisableNfses {
       pendente: string;
       enviadoEnvioNotas: string;
     }[] = [];
-
     for await (const id of idsToDisable) {
       const criteria = `(nfseIds.IdNota.contains("${id}"))`;
       const findedItems = await this.zoho.findAllItems(linkNames, criteria);
