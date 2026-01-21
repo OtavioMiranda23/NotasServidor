@@ -104,11 +104,15 @@ class ZohoApi {
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error) && error.response?.data.code === 9280) {
-                console.error("ENTROU ERRO 9280");
                 return { success: false, data: [] };
             }
             console.error("Erro ao buscar todos os itens:");
-            console.error(error);
+            if (error.response && error.response.data) {
+                console.error(error.response.data);
+            }
+            else {
+                console.error(error);
+            }
             throw error;
         }
     }
