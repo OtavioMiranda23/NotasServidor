@@ -265,27 +265,38 @@ export default class ZohoApi implements IApiNota {
     content: { data: { [key: string]: string } },
     ids: string[],
   ) {
-    const requestOptions = {
-      headers: {
-        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    };
-    const results: string[] = [];
-    for await (const id of ids) {
-      const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
-      const result = await this.#axios.patch(url, content, requestOptions);
-      const data = result.data as {
-        code: number;
-        data: { ID: string };
-        message: string;
+    try {
+      const requestOptions = {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       };
-      if (data.code === 3000) {
-        results.push(data.data.ID);
+      const results: string[] = [];
+      for await (const id of ids) {
+        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+        const result = await this.#axios.patch(url, content, requestOptions);
+        const data = result.data as {
+          code: number;
+          data: { ID: string };
+          message: string;
+        };
+        console.log(`Update Zoho ID ${id}: ${JSON.stringify(data)}`);
+        if (data.code === 3000) {
+          results.push(data.data.ID);
+        }
       }
+      return results;
+    } catch (error) {
+      console.error("Erro ao atualizar itens por IDs:");
+      if (axios.isAxiosError(error)) {
+        console.log(error.response?.data);
+        throw error;
+      }
+      console.error(error);
+      throw error;
     }
-    return results;
   }
 
   async getRecordByField(

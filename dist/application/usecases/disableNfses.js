@@ -6,11 +6,10 @@ class DisableNfses {
     }
     async execute(IdsNfsesRequest, linkNames, configNotasCanceladas) {
         const idsFoundedInZohoToCancel = [];
-        console.log({ IdsNfsesRequest });
         for await (const [i, idNfse] of IdsNfsesRequest.entries()) {
             if (i < 3) {
                 console.log(i);
-                const allNfesFindedToDisable = await this.zoho.findAllItems(linkNames, `(IdNota=="${idNfse}")`);
+                const allNfesFindedToDisable = await this.zoho.findAllItems(linkNames, `(IdNota == "${idNfse}" %26%26 desativado != "SIM")`);
                 if (allNfesFindedToDisable.success) {
                     const content = {
                         data: {
@@ -42,26 +41,43 @@ class DisableNfses {
             reportName: "Documentos_Vinculados_Report",
         };
         const pagamentosFounded = await this.getPagamentosToDisable(idsFoundedInZohoToCancel.map((item) => item.idNfse), linkNamesPagamentos);
-        console.log({ pagamentosFounded });
-        const successItemsUpdated = await this.strategyToDisable(pagamentosFounded, linkNamesPagamentos, idsFoundedInZohoToCancel);
+        const responseDisable = await this.strategyToDisable(pagamentosFounded, idsFoundedInZohoToCancel);
+        return responseDisable;
     }
-    async cancelNfse(idsRecordToDisable, linkNames, payload) {
-        console.log({ idsRecordToDisable, linkNames, payload });
+    async cancelNfse(idsRecordToDisable, payload) {
+        const linkNames = {
+            appName: "base-notas-qive",
+            reportName: "Copy_of_NFSe_Report",
+        };
+        const successItemsUpdate = await this.zoho.updateItemsByIds(linkNames.reportName, payload, idsRecordToDisable);
+        if (successItemsUpdate.length !== idsRecordToDisable.length) {
+            console.error({ successItemsUpdate });
+            console.error({ idsRecordToDisable });
+            throw new Error("Nem todas as NFSes foram desabilitadas com sucesso");
+        }
+        console.log("Notas desativadas com sucesso:");
+        console.log(successItemsUpdate);
+        return { successItemsUpdate };
     }
-    async strategyToDisable(pagamentosFounded, linkNames, idsFoundedInZohoToCancel) {
-        console.log("Entrou na strategyToDisable");
+    async strategyToDisable(pagamentosFounded, idsFoundedInZohoToCancel) {
+        const ppagamentosFoundedList = pagamentosFounded.map((p) => p.idNota);
         const idsNfseNaoVinculadas = idsFoundedInZohoToCancel.filter((item) => {
-            const isNfseNotInPagamentos = pagamentosFounded.some((pagamento) => pagamento.idNota !== item.idNfse);
-            return isNfseNotInPagamentos;
+            return !ppagamentosFoundedList.includes(item.idNfse);
         });
-        console.log({ idsNfseNaoVinculadas });
-        const payload = { data: { Desativado: "SIM" } };
-        await this.cancelNfse(idsNfseNaoVinculadas.map((item) => item.idRecord), linkNames, payload);
+        console.log("pagamentos encontrados", pagamentosFounded.length);
+        console.log("idsFoundedInZohoToCancel:", idsFoundedInZohoToCancel.length);
+        console.log("idsNfseNaoVinculadas:", idsNfseNaoVinculadas.length);
+        console.log("idsNfseNaoVinculadas length:", idsNfseNaoVinculadas);
+        if (idsNfseNaoVinculadas.length === 0) {
+            console.log("Todas as NFSes possuem pagamentos vinculados.");
+            return { successItemsUpdate: [] };
+        }
+        const payload = { data: { desativado: "SIM" } };
+        const successItemsUpdate = await this.cancelNfse(idsNfseNaoVinculadas.map((item) => item.idRecord), payload);
+        return successItemsUpdate;
     }
     async getPagamentosToDisable(idsToDisable, linkNames) {
         let pagamentosFounded = [];
-        console.log("idsToDisable:");
-        console.log(idsToDisable);
         for await (const id of idsToDisable) {
             const criteria = `(nfseIds.IdNota.contains("${id}"))`;
             const findedItems = await this.zoho.findAllItems(linkNames, criteria);

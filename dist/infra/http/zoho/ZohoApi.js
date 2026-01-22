@@ -187,23 +187,35 @@ class ZohoApi {
         return results;
     }
     async updateItemsByIds(reportName, content, ids) {
-        const requestOptions = {
-            headers: {
-                Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        };
-        const results = [];
-        for await (const id of ids) {
-            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
-            const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").patch(url, content, requestOptions);
-            const data = result.data;
-            if (data.code === 3000) {
-                results.push(data.data.ID);
+        try {
+            const requestOptions = {
+                headers: {
+                    Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            };
+            const results = [];
+            for await (const id of ids) {
+                const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+                const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").patch(url, content, requestOptions);
+                const data = result.data;
+                console.log(`Update Zoho ID ${id}: ${JSON.stringify(data)}`);
+                if (data.code === 3000) {
+                    results.push(data.data.ID);
+                }
             }
+            return results;
         }
-        return results;
+        catch (error) {
+            console.error("Erro ao atualizar itens por IDs:");
+            if (axios_1.default.isAxiosError(error)) {
+                console.log(error.response?.data);
+                throw error;
+            }
+            console.error(error);
+            throw error;
+        }
     }
     async getRecordByField(reportName, field) {
         const requestOptions = {

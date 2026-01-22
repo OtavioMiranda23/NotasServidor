@@ -1,5 +1,9 @@
 import { th } from "zod/v4/locales";
-import { IApiNota, IBaseConfigApi } from "../../infra/http/zoho/ZohoApi";
+import {
+  IApiNota,
+  IBaseConfigApi,
+  IZohoLinksNames,
+} from "../../infra/http/zoho/ZohoApi";
 import { all } from "axios";
 
 export class UpdateLastCursor {
@@ -8,8 +12,8 @@ export class UpdateLastCursor {
   public async execute(
     qiveCursor: number | null,
     zohoCursor: string | null,
-    config: IBaseConfigApi
-  ): Promise<void> {
+    config: Omit<IZohoLinksNames, "reportName">,
+  ): Promise<{ cursorUpdated: boolean; lastCursor: { result: unknown[] } }> {
     //verificar o null
     const zohoCursorInt = Number(zohoCursor);
     if (!qiveCursor || qiveCursor <= zohoCursorInt) {
@@ -20,6 +24,7 @@ export class UpdateLastCursor {
         ultimo_cursor: qiveCursor,
       },
     };
-    await this.zoho.insertRecord(content, config, 3);
+    const savedRecords = await this.zoho.saveRecord(content, config);
+    return { cursorUpdated: true, lastCursor: savedRecords };
   }
 }

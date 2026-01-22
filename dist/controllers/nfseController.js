@@ -70,6 +70,16 @@ class NFSeController {
             formName: "Historico_Notas_Canceladas",
         };
         const disabledNfses = await this.disableNfses.execute(cancelledIds, linkNamesToDisable, configNotasCanceladas);
+        if (!disabledNfses.successItemsUpdate.length) {
+            return "Nenhuma NFSe foi desabilitada.";
+        }
+        const linkNamesCursor = {
+            appName: "base-notas-qive",
+            formName: "Cursor_NFSe_Canceladas",
+        };
+        const updatedCursor = await this.updateLastCursor.execute(lastZohoCursor, nextCursorQive, linkNamesCursor);
+        console.log("Success!");
+        console.log(updatedCursor);
     }
 }
 exports.default = NFSeController;

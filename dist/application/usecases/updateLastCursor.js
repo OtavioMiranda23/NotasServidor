@@ -15,7 +15,8 @@ class UpdateLastCursor {
                 ultimo_cursor: qiveCursor,
             },
         };
-        await this.zoho.insertRecord(content, config, 3);
+        const savedRecords = await this.zoho.saveRecord(content, config);
+        return { cursorUpdated: true, lastCursor: savedRecords };
     }
 }
 exports.UpdateLastCursor = UpdateLastCursor;
