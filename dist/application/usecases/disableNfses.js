@@ -7,33 +7,31 @@ class DisableNfses {
     async execute(IdsNfsesRequest, linkNames, configNotasCanceladas) {
         const idsFoundedInZohoToCancel = [];
         for await (const [i, idNfse] of IdsNfsesRequest.entries()) {
-            if (i < 3) {
-                console.log(i);
-                const allNfesFindedToDisable = await this.zoho.findAllItems(linkNames, `(IdNota == "${idNfse}" %26%26 desativado != "SIM")`);
-                if (allNfesFindedToDisable.success) {
-                    const content = {
-                        data: {
-                            idNota: idNfse,
-                            tipoNota: "nfse",
-                            encontrada: "SIM",
-                        },
-                    };
-                    await this.zoho.saveRecord(content, configNotasCanceladas);
-                    idsFoundedInZohoToCancel.push({
-                        idNfse,
-                        idRecord: allNfesFindedToDisable.data[0].ID,
-                    });
-                }
-                else {
-                    const content = {
-                        data: {
-                            idNota: idNfse,
-                            tipoNota: "nfse",
-                            encontrada: "NAO",
-                        },
-                    };
-                    await this.zoho.saveRecord(content, configNotasCanceladas);
-                }
+            console.log(i);
+            const allNfesFindedToDisable = await this.zoho.findAllItems(linkNames, `(IdNota=="${idNfse}")`);
+            if (allNfesFindedToDisable.success) {
+                const content = {
+                    data: {
+                        idNota: idNfse,
+                        tipoNota: "nfse",
+                        encontrada: "SIM",
+                    },
+                };
+                await this.zoho.saveRecord(content, configNotasCanceladas);
+                idsFoundedInZohoToCancel.push({
+                    idNfse,
+                    idRecord: allNfesFindedToDisable.data[0].ID,
+                });
+            }
+            else {
+                const content = {
+                    data: {
+                        idNota: idNfse,
+                        tipoNota: "nfse",
+                        encontrada: "NAO",
+                    },
+                };
+                await this.zoho.saveRecord(content, configNotasCanceladas);
             }
         }
         const linkNamesPagamentos = {

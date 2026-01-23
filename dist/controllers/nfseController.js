@@ -55,31 +55,39 @@ class NFSeController {
         }
     }
     async updateCancelledNFSe() {
-        const linksNames = {
-            appName: "base-notas-qive",
-            reportName: "Cursor_NFSe_Canceladas_Report",
-        };
-        const lastZohoCursor = await this.getLastCursor.execute(linksNames);
-        const { cancelledIds, nextCursorQive } = await this.getCancelledNFSe.execute(lastZohoCursor);
-        const linkNamesToDisable = {
-            appName: "base-notas-qive",
-            reportName: "Copy_of_NFSe_Report",
-        };
-        const configNotasCanceladas = {
-            appName: "base-notas-qive",
-            formName: "Historico_Notas_Canceladas",
-        };
-        const disabledNfses = await this.disableNfses.execute(cancelledIds, linkNamesToDisable, configNotasCanceladas);
-        if (!disabledNfses.successItemsUpdate.length) {
-            return "Nenhuma NFSe foi desabilitada.";
+        try {
+            const linksNames = {
+                appName: "base-notas-qive",
+                reportName: "Cursor_NFSe_Canceladas_Report",
+            };
+            const lastZohoCursor = await this.getLastCursor.execute(linksNames);
+            const { cancelledIds, nextCursorQive } = await this.getCancelledNFSe.execute(lastZohoCursor);
+            const linkNamesToDisable = {
+                appName: "base-notas-qive",
+                reportName: "Copy_of_NFSe_Report",
+            };
+            const configNotasCanceladas = {
+                appName: "base-notas-qive",
+                formName: "Historico_Notas_Canceladas",
+            };
+            const disabledNfses = await this.disableNfses.execute(cancelledIds, linkNamesToDisable, configNotasCanceladas);
+            if (!disabledNfses.successItemsUpdate.length) {
+                console.log("Nenhuma NFSe foi desabilitada.");
+                return 204;
+            }
+            const linkNamesCursor = {
+                appName: "base-notas-qive",
+                formName: "Cursor_NFSe_Canceladas",
+            };
+            const updatedCursor = await this.updateLastCursor.execute(lastZohoCursor, nextCursorQive, linkNamesCursor);
+            console.log("Success!");
+            console.log(updatedCursor);
+            return 200;
         }
-        const linkNamesCursor = {
-            appName: "base-notas-qive",
-            formName: "Cursor_NFSe_Canceladas",
-        };
-        const updatedCursor = await this.updateLastCursor.execute(lastZohoCursor, nextCursorQive, linkNamesCursor);
-        console.log("Success!");
-        console.log(updatedCursor);
+        catch (e) {
+            console.error("Erro ao atualizar NFSe canceladas:", e);
+            return 500;
+        }
     }
 }
 exports.default = NFSeController;
