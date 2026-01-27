@@ -9,6 +9,7 @@ import CreateImage from "../../../application/usecases/createImage";
 import path from "node:path";
 import { buffer } from "node:stream/consumers";
 import { QiveNfseEventsResponse } from "../../../application/usecases/getCancelledNFSe";
+import { QiveNfeEventsResponse } from "../../../application/usecases/getCancelledNFe";
 
 type FoundedNotas = {
   nfe: { idNota: string[]; idRecord: string[] };
@@ -156,13 +157,13 @@ export default class QiveApi {
         dataNFe.dateTo
       }&cursor=${
         dataNFe.cursor
-      }&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
+      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
     } else {
       targetUrl = `https://api.arquivei.com.br/${
         dataNFe.isV2 ? "v2" : "v1"
       }/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${
         dataNFe.dateTo
-      }&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
+      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
     }
 
     // if (dataNFe.cursor) {
@@ -675,5 +676,22 @@ export default class QiveApi {
       throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
     }
     return data as QiveNfseEventsResponse;
+  }
+
+  async getCancelledNFe(cursor: string | null) {
+    const url = `https://api.arquivei.com.br/v1/events/nfe?type[]=110111${
+      cursor ? `&cursor=${cursor}` : ""
+    }`;
+    const headers = {
+      "X-API-ID": this.#credentials.apiId,
+      "X-API-KEY": this.#credentials.apiKey,
+    };
+    const res = await axios.get(url, { headers });
+    const data = res.data;
+    if (data.status && data.status.code && data.status.code !== 200) {
+      console.error("Erro ao buscar nfe canceladas:", data.message);
+      throw new Error(`Erro ao buscar nfe canceladas: ${data.message}`);
+    }
+    return data as QiveNfeEventsResponse;
   }
 }

@@ -101,10 +101,10 @@ class QiveApi {
         };
         let targetUrl;
         if (dataNFe.cursor) {
-            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&cursor=${dataNFe.cursor}&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
+            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&cursor=${dataNFe.cursor}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
         }
         else {
-            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
+            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
         }
         let nextUrl = targetUrl;
         let count = 1;
@@ -537,6 +537,20 @@ class QiveApi {
         if (data.status && data.status.code && data.status.code !== 200) {
             console.error("Erro ao buscar nfse canceladas:", data.message);
             throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
+        }
+        return data;
+    }
+    async getCancelledNFe(cursor) {
+        const url = `https://api.arquivei.com.br/v1/events/nfe?type[]=110111${cursor ? `&cursor=${cursor}` : ""}`;
+        const headers = {
+            "X-API-ID": __classPrivateFieldGet(this, _QiveApi_credentials, "f").apiId,
+            "X-API-KEY": __classPrivateFieldGet(this, _QiveApi_credentials, "f").apiKey,
+        };
+        const res = await axios_1.default.get(url, { headers });
+        const data = res.data;
+        if (data.status && data.status.code && data.status.code !== 200) {
+            console.error("Erro ao buscar nfe canceladas:", data.message);
+            throw new Error(`Erro ao buscar nfe canceladas: ${data.message}`);
         }
         return data;
     }
