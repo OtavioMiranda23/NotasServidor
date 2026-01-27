@@ -9,9 +9,13 @@ exports.DataNFeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFeController {
-    constructor(getNFe, dateToSearch) {
+    constructor(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor) {
         this.getNFe = getNFe;
         this.dateToSearch = dateToSearch?.trim() || undefined;
+        this.getCancelledNFe = getCancelledNFe;
+        this.disableNfes = disableNfes;
+        this.getLastCursor = getLastCursor;
+        this.updateLastCursor = updateLastCursor;
     }
     async createNFe(errorConfig) {
         try {
@@ -49,6 +53,21 @@ class NFeController {
                     timeStamp: new Date().toISOString(),
                 },
             };
+        }
+    }
+    async updateCancelledNFe() {
+        try {
+            const linksNames = {
+                appName: "base-notas-qive",
+                reportName: "Cursor_NFe_Canceladas_Report",
+            };
+            const lastZohoCursor = await this.getLastCursor.execute(linksNames);
+            const { cancelledIds, nextCursorQive } = await this.getCancelledNFe.execute(lastZohoCursor);
+            console.log("cancelledIds:", { cancelledIds, nextCursorQive });
+        }
+        catch (e) {
+            console.error("Erro ao atualizar NFe canceladas:", e);
+            return 500;
         }
     }
 }

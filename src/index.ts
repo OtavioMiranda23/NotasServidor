@@ -12,6 +12,8 @@ import QiveApi from "./infra/http/qive/QiveApi";
 import CreateImage from "./application/usecases/createImage";
 import { UpdateLastCursor } from "./application/usecases/updateLastCursor";
 import { GetLastCursor } from "./application/usecases/getLastCursor";
+import { GetCancelledNFe } from "./application/usecases/getCancelledNFe";
+import DisableNfes from "./application/usecases/disableNfes";
 
 // const logger = new Logger("app.log");
 
@@ -148,14 +150,22 @@ async function main() {
     const getNFe = new GetNFe(zohoApi, credentialsQive, successNFeConfig);
     const getNFSe = new GetNFSe(zohoApi, credentialsQive, successNFSeConfig);
     const disableNfses = new DisableNfses(zohoApi);
+    const disableNfes = new DisableNfes(zohoApi);
     const getCancelledNFSe = new GetCancelledNFSe(qive);
+    const getCancelledNFe = new GetCancelledNFe(qive);
     const getLastCursor = new GetLastCursor(zohoApi);
     const updateLastCursor = new UpdateLastCursor(zohoApi);
-
     console.log("✓ Use cases criados");
 
     console.log("\nCriando controllers...");
-    const nfeController = new NFeController(getNFe, dateToSearch);
+    const nfeController = new NFeController(
+      getNFe,
+      dateToSearch,
+      getCancelledNFe,
+      disableNfes,
+      getLastCursor,
+      updateLastCursor,
+    );
     const nfseController = new NFSeController(
       getNFSe,
       dateToSearch,
@@ -169,36 +179,37 @@ async function main() {
     console.log(dateToSearch);
 
     console.log("\n=== PROCESSANDO NFe ===");
-    const nfeResult = await nfeController.createNFe(errorNFeConfig);
+    const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
+    // const nfeResult = await nfeController.createNFe(errorNFeConfig);
 
-    if (nfeResult.status === 200) {
-      console.log("✓ NFe processada com sucesso:");
-      console.log(JSON.stringify(nfeResult.data, null, 2));
-    } else {
-      console.error("✗ Erro ao processar NFe:");
-      console.error(JSON.stringify(nfeResult.error, null, 2));
-    }
+    // if (nfeResult.status === 200) {
+    //   console.log("✓ NFe processada com sucesso:");
+    //   console.log(JSON.stringify(nfeResult.data, null, 2));
+    // } else {
+    //   console.error("✗ Erro ao processar NFe:");
+    //   console.error(JSON.stringify(nfeResult.error, null, 2));
+    // }
 
-    console.log("\n=== PROCESSANDO NFSe ===");
-    const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
-    const nfseUpdateCancelledResult =
-      await nfseController.updateCancelledNFSe();
+    // console.log("\n=== PROCESSANDO NFSe ===");
+    // const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
+    // const nfseUpdateCancelledResult =
+    //   await nfseController.updateCancelledNFSe();
 
-    if (createNfseResult.status === 200) {
-      console.log("✓ NFSe processada com sucesso:");
-      console.log(JSON.stringify(createNfseResult.data, null, 2));
-    } else {
-      console.error("✗ Erro ao processar NFSe:");
-      console.error(JSON.stringify(createNfseResult.error, null, 2));
-    }
+    // if (createNfseResult.status === 200) {
+    //   console.log("✓ NFSe processada com sucesso:");
+    //   console.log(JSON.stringify(createNfseResult.data, null, 2));
+    // } else {
+    //   console.error("✗ Erro ao processar NFSe:");
+    //   console.error(JSON.stringify(createNfseResult.error, null, 2));
+    // }
 
-    if (nfseUpdateCancelledResult === 200) {
-      console.log("✓ NFSe canceladas atualizadas com sucesso.");
-    } else if (nfseUpdateCancelledResult === 204) {
-      console.log("Nenhuma NFSe cancelada para atualizar.");
-    } else {
-      console.error("✗ Erro ao atualizar NFSe canceladas.");
-    }
+    // if (nfseUpdateCancelledResult === 200) {
+    //   console.log("✓ NFSe canceladas atualizadas com sucesso.");
+    // } else if (nfseUpdateCancelledResult === 204) {
+    //   console.log("Nenhuma NFSe cancelada para atualizar.");
+    // } else {
+    //   console.error("✗ Erro ao atualizar NFSe canceladas.");
+    // }
 
     console.log("\n✓ PROCESSAMENTO CONCLUÍDO COM SUCESSO!");
   } catch (error: any) {

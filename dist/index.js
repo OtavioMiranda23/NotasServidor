@@ -16,6 +16,8 @@ const QiveApi_1 = __importDefault(require("./infra/http/qive/QiveApi"));
 const createImage_1 = __importDefault(require("./application/usecases/createImage"));
 const updateLastCursor_1 = require("./application/usecases/updateLastCursor");
 const getLastCursor_1 = require("./application/usecases/getLastCursor");
+const getCancelledNFe_1 = require("./application/usecases/getCancelledNFe");
+const disableNfes_1 = __importDefault(require("./application/usecases/disableNfes"));
 const baseDir = process.pkg
     ? path_1.default.dirname(process.execPath)
     : process.cwd();
@@ -99,45 +101,19 @@ async function main() {
         const getNFe = new getNFe_1.default(zohoApi, credentialsQive, successNFeConfig);
         const getNFSe = new getNFSe_1.default(zohoApi, credentialsQive, successNFSeConfig);
         const disableNfses = new disableNfses_1.default(zohoApi);
+        const disableNfes = new disableNfes_1.default(zohoApi);
         const getCancelledNFSe = new getCancelledNFSe_1.GetCancelledNFSe(qive);
+        const getCancelledNFe = new getCancelledNFe_1.GetCancelledNFe(qive);
         const getLastCursor = new getLastCursor_1.GetLastCursor(zohoApi);
         const updateLastCursor = new updateLastCursor_1.UpdateLastCursor(zohoApi);
         console.log("✓ Use cases criados");
         console.log("\nCriando controllers...");
-        const nfeController = new nfeController_1.default(getNFe, dateToSearch);
+        const nfeController = new nfeController_1.default(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor);
         const nfseController = new nfseController_1.default(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor);
         console.log("✓ Controllers criados");
         console.log(dateToSearch);
         console.log("\n=== PROCESSANDO NFe ===");
-        const nfeResult = await nfeController.createNFe(errorNFeConfig);
-        if (nfeResult.status === 200) {
-            console.log("✓ NFe processada com sucesso:");
-            console.log(JSON.stringify(nfeResult.data, null, 2));
-        }
-        else {
-            console.error("✗ Erro ao processar NFe:");
-            console.error(JSON.stringify(nfeResult.error, null, 2));
-        }
-        console.log("\n=== PROCESSANDO NFSe ===");
-        const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
-        const nfseUpdateCancelledResult = await nfseController.updateCancelledNFSe();
-        if (createNfseResult.status === 200) {
-            console.log("✓ NFSe processada com sucesso:");
-            console.log(JSON.stringify(createNfseResult.data, null, 2));
-        }
-        else {
-            console.error("✗ Erro ao processar NFSe:");
-            console.error(JSON.stringify(createNfseResult.error, null, 2));
-        }
-        if (nfseUpdateCancelledResult === 200) {
-            console.log("✓ NFSe canceladas atualizadas com sucesso.");
-        }
-        else if (nfseUpdateCancelledResult === 204) {
-            console.log("Nenhuma NFSe cancelada para atualizar.");
-        }
-        else {
-            console.error("✗ Erro ao atualizar NFSe canceladas.");
-        }
+        const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
         console.log("\n✓ PROCESSAMENTO CONCLUÍDO COM SUCESSO!");
     }
     catch (error) {
