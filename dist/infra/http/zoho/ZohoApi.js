@@ -172,6 +172,8 @@ class ZohoApi {
             return res.data;
         }
         catch (e) {
+            console.error("Erro ao inserir registro no Zoho:");
+            console.error(e.data.result);
             if (axios_1.default.isAxiosError(e)) {
                 throw e;
             }

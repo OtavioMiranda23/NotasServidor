@@ -60,10 +60,10 @@ async function main() {
       missingEnvs.forEach((env) => console.error(`  ✗ ${env}`));
       console.error("\nSOLUÇÃO:");
       console.error(
-        `1. Certifique-se de que existe um arquivo .env em: ${envPath}`
+        `1. Certifique-se de que existe um arquivo .env em: ${envPath}`,
       );
       console.error(
-        "2. Verifique se todas as variáveis necessárias estão presentes"
+        "2. Verifique se todas as variáveis necessárias estão presentes",
       );
       console.error("3. Copie o arquivo .env.dev e renomeie para .env");
       return;
@@ -124,7 +124,7 @@ async function main() {
       credentialsQive,
       errorNFeConfig,
       errorNFSeConfig,
-      { dateToSearch }
+      { dateToSearch },
     );
 
     console.log("\nInicializando ZohoApi...");
@@ -181,8 +181,8 @@ async function main() {
           timestamp: new Date().toISOString(),
         },
         null,
-        2
-      )
+        2,
+      ),
     );
   }
 }

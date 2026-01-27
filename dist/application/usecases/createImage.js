@@ -633,7 +633,6 @@ class CreateImage {
             });
         };
         const impostos = this.mapearImpostosNFSe(nota.ServicoValores);
-        console.log("Impostos mapeados:", impostos);
         return `
     <html lang="pt-BR">
       <head>
@@ -923,7 +922,7 @@ class CreateImage {
               <div class="nfse-grid-campos uma-coluna">
                 <div class="nfse-campo">
                   <span class="label">Endereço:</span>
-                  <span class="valor">${this.safeValue(nota.PrestadorServicoEndereco?.zc_display_value)}</span>
+                  <span class="valor">${this.parseEndereco(nota.PrestadorServicoEndereco)}</span>
                 </div>
               </div>
             </div>
@@ -952,7 +951,7 @@ class CreateImage {
               <div class="nfse-grid-campos uma-coluna">
                 <div class="nfse-campo">
                   <span class="label">Endereço:</span>
-                  <span class="valor">${this.safeValue(nota.TomadorEndereco?.zc_display_value)}</span>
+                  <span class="valor">${this.parseEndereco(nota.TomadorEndereco)}</span>
                 </div>
               </div>
             </div>
@@ -1014,6 +1013,11 @@ class CreateImage {
         </div>
       </body>
     </html>`;
+    }
+    parseEndereco(endereco) {
+        if (!endereco)
+            throw new Error("Endereço não encontrado");
+        return `${endereco.address_line_1 ? endereco.address_line_1.trim() + "," : ""} ${endereco.address_line_2 ? endereco.address_line_2.trim() + "," : ""} ${endereco.country ? endereco.country.trim() + "," : ""} ${endereco.district_city ? endereco.district_city.trim() + " -" : ""} ${endereco.postal_Code ? endereco.postal_Code.trim() + " -" : ""} ${endereco.state_province ? endereco.state_province.trim() : ""}`;
     }
 }
 exports.default = CreateImage;

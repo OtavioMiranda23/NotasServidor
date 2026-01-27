@@ -23,7 +23,7 @@ export interface IApiNota {
   insertRecord(
     content: object,
     config: IBaseConfigApi,
-    attemptsNumber: number
+    attemptsNumber: number,
   ): Promise<{ result: unknown[] }>;
   uploadFile(data: {
     idCreatedRecord: string;
@@ -42,7 +42,7 @@ const ZohoErrorSchema = z.object({
       z.object({
         code: z.number(),
         error: z.string(),
-      })
+      }),
     ),
   }),
 });
@@ -88,7 +88,7 @@ export default class ZohoApi implements IApiNota {
       throw new ZohoGenericError(
         "Missing Zoho credentials",
         "Erro ao atualizar token",
-        500
+        500,
       );
     }
     const authUrl = `${this.#credentials.authBaseUrl}?client_id=${
@@ -115,7 +115,7 @@ export default class ZohoApi implements IApiNota {
 
   private static isInvalidResponse(res: ZohoResponseType): boolean {
     const errorsResponses = res.data.result.filter(
-      (result) => result.code !== 3000
+      (result) => result.code !== 3000,
     );
     if (!errorsResponses.length) {
       console.error("Registros não foram inseridos com sucesso:");
@@ -149,7 +149,7 @@ export default class ZohoApi implements IApiNota {
         throw new ZohoNotFoundRecords(
           `Erro ao buscar registro: ${error.response?.data}`,
           error,
-          404
+          404,
         );
       } else {
         throw error;
@@ -181,7 +181,7 @@ export default class ZohoApi implements IApiNota {
         throw new ZohoNotFoundRecords(
           `Erro ao buscar registro: ${error.response?.data}`,
           error,
-          404
+          404,
         );
       } else {
         throw error;
@@ -191,7 +191,7 @@ export default class ZohoApi implements IApiNota {
 
   async getRecordByField(
     reportName: string,
-    field: { key: string; value: string }
+    field: { key: string; value: string },
   ) {
     const requestOptions = {
       headers: {
@@ -208,7 +208,7 @@ export default class ZohoApi implements IApiNota {
   async insertRecord(
     content: object,
     config: IBaseConfigApi,
-    attemptsNumber: number
+    attemptsNumber: number,
   ): Promise<{ result: unknown[] }> {
     const attempt = 0;
     if (!this.#accessToken) {
@@ -231,11 +231,14 @@ export default class ZohoApi implements IApiNota {
         throw new InsertZohoError(
           "Algum item não retornou 3000:",
           res.data,
-          500
+          500,
         );
       }
       return res.data as { result: unknown[] };
     } catch (e: unknown) {
+      console.error("Erro ao inserir registro no Zoho:");
+      //@ts-ignore
+      console.error(e.data.result);
       if (axios.isAxiosError(e)) {
         throw e;
       }
@@ -251,8 +254,8 @@ export default class ZohoApi implements IApiNota {
         console.error(parsed.error);
         throw new Error(
           `Zod error, verifique o nome da tabela: ${JSON.stringify(
-            parsed.error
-          )}`
+            parsed.error,
+          )}`,
         );
       }
       const axiosParsed = AxiosErrorSchema.safeParse(e);
@@ -301,10 +304,10 @@ export default class ZohoApi implements IApiNota {
       };
       const response = await axios.request(config);
       console.log(
-        `Buffer criado para a nota ${data.idCreatedRecord}: ${data.buffer.length} bytes`
+        `Buffer criado para a nota ${data.idCreatedRecord}: ${data.buffer.length} bytes`,
       );
       console.log(
-        `Resposta do id da nota ${data.idCreatedRecord} upload Zoho:`
+        `Resposta do id da nota ${data.idCreatedRecord} upload Zoho:`,
       );
       console.log(JSON.stringify(response.data));
 
@@ -349,7 +352,7 @@ export default class ZohoApi implements IApiNota {
   }
 
   private async convertToBuffer(
-    value: Blob | Buffer | Uint8Array
+    value: Blob | Buffer | Uint8Array,
   ): Promise<Buffer> {
     if (Buffer.isBuffer(value)) {
       return value;

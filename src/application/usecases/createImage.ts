@@ -1,5 +1,15 @@
 import QiveApiError from "../../infra/errorHandling/QiveApiError";
 import htmlPdf from "html-pdf-node";
+
+type Endereco = {
+  address_line_1: string | undefined;
+  address_line_2: string | undefined;
+  district_city: string | undefined;
+  state_province: string | undefined;
+  postal_Code: string | undefined;
+  country: string | undefined;
+};
+
 export type NotaNFe = {
   id_nota?: string;
   Tipo?: string;
@@ -60,7 +70,7 @@ export type NotaNFSe = {
   Numero?: string;
   PrestadorCpnj?: string;
   PrestadorInscricaoMunicipal?: string;
-  PrestadorServicoEndereco?: { zc_display_value: string };
+  PrestadorServicoEndereco?: Endereco;
   PrestadorServicoRazaoSocial?: string;
   ValorCredito?: string;
   ValorIss?: string;
@@ -69,7 +79,7 @@ export type NotaNFSe = {
   Tipo?: "nfse";
   TomadorRazaoSocial?: string;
   TomadorCnpj?: string;
-  TomadorEndereco?: { zc_display_value: string };
+  TomadorEndereco?: Endereco;
   X509Certificate?: string;
 };
 
@@ -97,7 +107,7 @@ export default class CreateImage {
     } catch (error) {
       throw new QiveApiError(
         "Erro ao renderizar arquivo da NFe",
-        JSON.stringify(error)
+        JSON.stringify(error),
       );
     }
   }
@@ -113,7 +123,7 @@ export default class CreateImage {
     } catch (error) {
       throw new QiveApiError(
         "Erro ao renderizar arquivo da NFSe",
-        JSON.stringify(error)
+        JSON.stringify(error),
       );
     }
   }
@@ -483,7 +493,7 @@ export default class CreateImage {
                 <div class="nfe-campo">
                   <span class="label">Nome/Razão Social</span>
                   <span class="valor destaque">${this.safeValue(
-                    nota.emit_xNome
+                    nota.emit_xNome,
                   )}</span>
                 </div>
               </div>
@@ -491,7 +501,7 @@ export default class CreateImage {
                 <div class="nfe-campo">
                   <span class="label">CNPJ/CPF</span>
                   <span class="valor">${this.formatCNPJ(
-                    nota.CNPJ_Emitente
+                    nota.CNPJ_Emitente,
                   )}</span>
                 </div>
                 <div class="nfe-campo">
@@ -503,10 +513,10 @@ export default class CreateImage {
                 <div class="nfe-campo">
                   <span class="label">Endereço</span>
                   <span class="valor">${this.safeValue(
-                    nota.emit_xLgr
+                    nota.emit_xLgr,
                   )}, ${this.safeValue(nota.emit_nro)} - ${this.safeValue(
-      nota.emit_xBairro
-    )}</span>
+                    nota.emit_xBairro,
+                  )}</span>
                 </div>
               </div>
             </div>
@@ -519,7 +529,7 @@ export default class CreateImage {
                 <div class="nfe-campo">
                   <span class="label">Nome/Razão Social</span>
                   <span class="valor destaque">${this.safeValue(
-                    nota.dest_XNome
+                    nota.dest_XNome,
                   )}</span>
                 </div>
               </div>
@@ -531,7 +541,7 @@ export default class CreateImage {
                 <div class="nfe-campo">
                   <span class="label">Data de Emissão</span>
                   <span class="valor">${this.formatDataHora(
-                    nota.ide_dhEmi
+                    nota.ide_dhEmi,
                   )}</span>
                 </div>
                 <div class="nfe-campo">
@@ -545,12 +555,12 @@ export default class CreateImage {
                 <div class="nfe-campo">
                   <span class="label">Endereço</span>
                   <span class="valor">${this.safeValue(
-                    nota.dest_xLgr
+                    nota.dest_xLgr,
                   )}, ${this.safeValue(nota.dest_nro)} - ${this.safeValue(
-      nota.dest_xBairro
-    )}, ${this.safeValue(nota.dest_xMun)} - ${this.safeValue(
-      nota.dest_UF
-    )}</span>
+                    nota.dest_xBairro,
+                  )}, ${this.safeValue(nota.dest_xMun)} - ${this.safeValue(
+                    nota.dest_UF,
+                  )}</span>
                 </div>
               </div>
             </div>
@@ -583,7 +593,7 @@ export default class CreateImage {
                     <td>${formatCurrency(produto.vUnCom)}</td>
                     <td><strong>${formatCurrency(produto.vProd)}</strong></td>
 
-                  </tr>`
+                  </tr>`,
                 )
                 .join("")}
               </tbody>
@@ -597,25 +607,25 @@ export default class CreateImage {
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Base de Cálculo do ICMS:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vProd
+                    nota.vProd,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Valor do ICMS:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vICMS as string
+                    nota.vICMS as string,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Valor do IPI:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vIPI as string
+                    nota.vIPI as string,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Valor Total dos Produtos:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vProd
+                    nota.vProd,
                   )}</span>
                 </div>
               </div>
@@ -626,37 +636,37 @@ export default class CreateImage {
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Valor Total dos Produtos:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vProd
+                    nota.vProd,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Valor do Frete:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vFrete as string
+                    nota.vFrete as string,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Valor do Seguro:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vSeg as string
+                    nota.vSeg as string,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Desconto:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vDesc
+                    nota.vDesc,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">Outras Despesas:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vOutro as string
+                    nota.vOutro as string,
                   )}</span>
                 </div>
                 <div class="nfe-totais-linha">
                   <span class="nfe-totais-label">VALOR TOTAL DA NFe:</span>
                   <span class="nfe-totais-valor">${formatCurrency(
-                    nota.vNF
+                    nota.vNF,
                   )}</span>
                 </div>
               </div>
@@ -667,15 +677,15 @@ export default class CreateImage {
             <div class="nfe-info-adicional-titulo">Informações Adicionais de Interesse do Contribuinte</div>
             <div class="nfe-info-adicional-conteudo">
               <strong>Natureza da Operação:</strong> ${this.safeValue(
-                nota.ide_natOp
+                nota.ide_natOp,
               )}<br>
               <strong>Código da NFe:</strong> ${this.safeValue(
-                nota.ide_cNF
+                nota.ide_cNF,
               )}<br>
             </div>
             <div class="certificado-x509">
               <span>Chave de integridade da NFe: ${this.extractChaveIntegridade(
-                nota.id_nota
+                nota.id_nota,
               )}</span>
             </div>
           </div>
@@ -683,7 +693,7 @@ export default class CreateImage {
           <div class="nfe-rodape">
             <div>
               <strong>NFe nº ${this.safeValue(
-                nota.ide_nNF
+                nota.ide_nNF,
               )} - Série ${this.safeValue(nota.ide_serie)}</strong><br>
               Emitida em: ${this.formatDataHora(nota.ide_dhEmi)}
             </div>
@@ -708,7 +718,7 @@ export default class CreateImage {
     if (!cnpj) return "-";
     return cnpj.replace(
       /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-      "$1.$2.$3/$4-$5"
+      "$1.$2.$3/$4-$5",
     );
   }
 
@@ -803,9 +813,8 @@ export default class CreateImage {
         ValorInss: string | null;
         ValorIss: string | null;
         Ir: string | null;
-      }
+      },
     );
-    console.log("Impostos mapeados:", impostos);
     return `
     <html lang="pt-BR">
       <head>
@@ -1064,13 +1073,13 @@ export default class CreateImage {
               <div class="nfse-info-item">
                 <span class="label">Data e Hora de Emissão</span>
                 <span class="valor">${this.formatDataHora(
-                  nota.DataEmissao
+                  nota.DataEmissao,
                 )}</span>
               </div>
               <div class="nfse-info-item">
                 <span class="label">Código de Verificação</span>
                 <span class="valor">${this.safeValue(
-                  nota.CodigoVerificacao
+                  nota.CodigoVerificacao,
                 )}</span>
               </div>
             </div>
@@ -1084,13 +1093,13 @@ export default class CreateImage {
                 <div class="nfse-campo">
                   <span class="label">CPF/CNPJ:</span>
                   <span class="valor destaque">${this.formatCNPJ(
-                    nota.PrestadorServicoCnpj
+                    nota.PrestadorServicoCnpj,
                   )}</span>
                 </div>
                 <div class="nfse-campo">
                   <span class="label">Inscrição Municipal:</span>
                   <span class="valor">${this.safeValue(
-                    nota.PrestadorInscricaoMunicipal
+                    nota.PrestadorInscricaoMunicipal,
                   )}</span>
                 </div>
               </div>
@@ -1098,15 +1107,15 @@ export default class CreateImage {
                 <div class="nfse-campo">
                   <span class="label">Nome/Razão Social:</span>
                   <span class="valor destaque">${this.safeValue(
-                    nota.PrestadorServicoRazaoSocial
+                    nota.PrestadorServicoRazaoSocial,
                   )}</span>
                 </div>
               </div>
               <div class="nfse-grid-campos uma-coluna">
                 <div class="nfse-campo">
                   <span class="label">Endereço:</span>
-                  <span class="valor">${this.safeValue(
-                    nota.PrestadorServicoEndereco?.zc_display_value
+                  <span class="valor">${this.parseEndereco(
+                    nota.PrestadorServicoEndereco,
                   )}</span>
                 </div>
               </div>
@@ -1121,7 +1130,7 @@ export default class CreateImage {
                 <div class="nfse-campo">
                   <span class="label">CPF/CNPJ:</span>
                   <span class="valor destaque">${this.formatCNPJ(
-                    nota.TomadorCnpj
+                    nota.TomadorCnpj,
                   )}</span>
                 </div>
                 <div class="nfse-campo">
@@ -1133,15 +1142,15 @@ export default class CreateImage {
                 <div class="nfse-campo">
                   <span class="label">Nome/Razão Social:</span>
                   <span class="valor destaque">${this.safeValue(
-                    nota.TomadorRazaoSocial
+                    nota.TomadorRazaoSocial,
                   )}</span>
                 </div>
               </div>
               <div class="nfse-grid-campos uma-coluna">
                 <div class="nfse-campo">
                   <span class="label">Endereço:</span>
-                  <span class="valor">${this.safeValue(
-                    nota.TomadorEndereco?.zc_display_value
+                  <span class="valor">${this.parseEndereco(
+                    nota.TomadorEndereco,
                   )}</span>
                 </div>
               </div>
@@ -1151,7 +1160,7 @@ export default class CreateImage {
           <!-- Valores da NFSe -->
           <div class="nfse-valores-fiscais">
             <div class="nfse-secao-cabecalho">Valor total do serviço: ${formatCurrency(
-              impostos?.valorServico || undefined
+              impostos?.valorServico || undefined,
             )}</div>
             <div class="nfse-valores-container">
               <div class="nfse-valor-fiscal">
@@ -1196,7 +1205,7 @@ export default class CreateImage {
               nota.ItemListaServico
             }</strong></div>
             <div class="nfse-discriminacao-conteudo">${this.safeValue(
-              nota.Discriminacao
+              nota.Discriminacao,
             )}</div>
           </div>
 
@@ -1210,5 +1219,10 @@ export default class CreateImage {
         </div>
       </body>
     </html>`;
+  }
+
+  private parseEndereco(endereco: Endereco | undefined): string {
+    if (!endereco) throw new Error("Endereço não encontrado");
+    return `${endereco.address_line_1 ? endereco.address_line_1.trim() + "," : ""} ${endereco.address_line_2 ? endereco.address_line_2.trim() + "," : ""} ${endereco.country ? endereco.country.trim() + "," : ""} ${endereco.district_city ? endereco.district_city.trim() + " -" : ""} ${endereco.postal_Code ? endereco.postal_Code.trim() + " -" : ""} ${endereco.state_province ? endereco.state_province.trim() : ""}`;
   }
 }

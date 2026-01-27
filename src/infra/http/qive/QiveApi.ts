@@ -83,7 +83,7 @@ export default class QiveApi {
     zoho: IApiNota,
     createImage: CreateImage,
     credentials: CredentialsQive,
-    successConfig: IBaseConfigApi
+    successConfig: IBaseConfigApi,
   ) {
     this.#zohoApi = zoho;
     this.#successConfig = successConfig;
@@ -97,7 +97,7 @@ export default class QiveApi {
 
   async updateNota(
     content: { access_key?: string; id?: string; value: string }[],
-    typeNota: "nfe" | "nfse"
+    typeNota: "nfe" | "nfse",
   ) {
     let targetUrl: string = "";
     if (typeNota === "nfe") {
@@ -123,7 +123,7 @@ export default class QiveApi {
                 }))
               : content.map((el) => ({ id: el.id, value: el.value })),
         },
-        { headers: headers }
+        { headers: headers },
       );
       console.log(`Resposta do update:`);
       console.log(res.data);
@@ -137,7 +137,7 @@ export default class QiveApi {
   async getReceivesNFe(
     dataNFe: DataNFe,
     errorConfig: IBaseConfigApi,
-    limit: number = 50
+    limit: number = 50,
   ) {
     const options = {
       method: "GET",
@@ -203,7 +203,7 @@ export default class QiveApi {
         const resZ = await this.#zohoApi.insertRecord(
           field,
           this.#successConfig,
-          attemptsNumber
+          attemptsNumber,
         );
 
         const currentBatchIds = resZ.result.map((el: any) => el.data.ID);
@@ -244,7 +244,7 @@ export default class QiveApi {
         await this.#zohoApi.insertRecord(
           fieldsError,
           errorConfig,
-          attemptsNumber
+          attemptsNumber,
         );
       }
     }
@@ -258,7 +258,7 @@ export default class QiveApi {
   async getReceivesNFSe(
     dataNFSe: DataNFSe,
     errorConfig: IBaseConfigApi,
-    limit: number = 50
+    limit: number = 50,
   ) {
     const options = {
       method: "GET",
@@ -309,15 +309,14 @@ export default class QiveApi {
         const resZ = await this.#zohoApi.insertRecord(
           field,
           this.#successConfig,
-          attemptsNumber
+          attemptsNumber,
         );
         const currentBatchIds = resZ.result.map((el: any) => el.data.ID);
         this.#idsFoundedNotas.nfse.idRecord.push(...currentBatchIds);
         const pdfNfseBuffers: Buffer<ArrayBufferLike>[] = [];
         for await (const notaNFSe of fieldsFormArr) {
-          const pdfNfseBuffer = await this.#createImage.renderizarNotaNfse(
-            notaNFSe
-          );
+          const pdfNfseBuffer =
+            await this.#createImage.renderizarNotaNfse(notaNFSe);
           //@ts-ignore
           pdfNfseBuffers.push(pdfNfseBuffer);
         }
@@ -350,7 +349,7 @@ export default class QiveApi {
             await this.#zohoApi.insertRecord(
               fieldsError,
               errorConfig,
-              attemptsNumber
+              attemptsNumber,
             );
           } catch (error: unknown) {
             const errorMessage =
@@ -476,10 +475,26 @@ export default class QiveApi {
           identificacaoPrestador.InscricaoMunicipal,
         PrestadorServicoRazaoSocial: prestadorServico.RazaoSocial,
         PrestadorServicoEndereco: {
-          address_line_1: prestadorServico.Endereco.Endereco,
-          address_line_2: prestadorServico.Endereco.Numero,
-          district_city: prestadorServico.Endereco.Complemento,
-          state_province: prestadorServico.Endereco.Bairro,
+          address_line_1:
+            prestadorServico.Endereco.Endereco &&
+            prestadorServico.Endereco.Endereco.length > 50
+              ? prestadorServico.Endereco.Endereco.substring(0, 50)
+              : prestadorServico.Endereco.Endereco,
+          address_line_2:
+            prestadorServico.Endereco.Numero &&
+            prestadorServico.Endereco.Numero.length > 50
+              ? prestadorServico.Endereco.Numero.substring(0, 50)
+              : prestadorServico.Endereco.Numero,
+          district_city:
+            prestadorServico.Endereco.Complemento &&
+            prestadorServico.Endereco.Complemento.length > 50
+              ? prestadorServico.Endereco.Complemento.substring(0, 50)
+              : prestadorServico.Endereco.Complemento,
+          state_province:
+            prestadorServico.Endereco.Bairro &&
+            prestadorServico.Endereco.Bairro.length > 50
+              ? prestadorServico.Endereco.Bairro.substring(0, 50)
+              : prestadorServico.Endereco.Bairro,
           postal_Code: prestadorServico.Endereco.Uf,
           country: prestadorServico.Endereco.Cep,
         },
@@ -510,12 +525,31 @@ export default class QiveApi {
         TomadorInscricaoMunicipal: identificacaoTomador.InscricaoMunicipal,
         TomadorRazaoSocial: tomador.RazaoSocial,
         TomadorEndereco: {
-          address_line_1: tomador.Endereco.Endereco,
-          address_line_2: tomador.Endereco.Numero,
-          district_city: tomador.Endereco.Bairro,
-          state_province: tomador.Endereco.CodigoMunicipio,
-          postal_Code: tomador.Endereco.Uf,
-          country: tomador.Endereco.Cep,
+          address_line_1:
+            tomador.Endereco.Endereco && tomador.Endereco.Endereco.length > 50
+              ? tomador.Endereco.Endereco.substring(0, 50)
+              : tomador.Endereco.Endereco,
+          address_line_2:
+            tomador.Endereco.Numero && tomador.Endereco.Numero.length > 50
+              ? tomador.Endereco.Numero.substring(0, 50)
+              : tomador.Endereco.Numero,
+          district_city:
+            tomador.Endereco.Bairro && tomador.Endereco.Bairro.length > 50
+              ? tomador.Endereco.Bairro.substring(0, 50)
+              : tomador.Endereco.Bairro,
+          state_province:
+            tomador.Endereco.CodigoMunicipio &&
+            tomador.Endereco.CodigoMunicipio.length > 50
+              ? tomador.Endereco.CodigoMunicipio.substring(0, 50)
+              : tomador.Endereco.CodigoMunicipio,
+          postal_Code:
+            tomador.Endereco.Uf && tomador.Endereco.Uf.length > 50
+              ? tomador.Endereco.Uf.substring(0, 50)
+              : tomador.Endereco.Uf,
+          country:
+            tomador.Endereco.Cep && tomador.Endereco.Cep.length > 50
+              ? tomador.Endereco.Cep.substring(0, 50)
+              : tomador.Endereco.Cep,
         },
         TomadorEmail:
           tomador && tomador.Contato && tomador.Contato.Email
@@ -540,7 +574,7 @@ export default class QiveApi {
       const { enderDest } = dest;
       if (!xml.total) {
         console.log(
-          `Imposto não encontrado na nota ${d.xml.NFe.infNFe["@attributes"].Id}`
+          `Imposto não encontrado na nota ${d.xml.NFe.infNFe["@attributes"].Id}`,
         );
       }
       return {

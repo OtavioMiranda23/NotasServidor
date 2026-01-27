@@ -360,10 +360,22 @@ class QiveApi {
                 IdentificacaoPrestadorInscricaoMunicipal: identificacaoPrestador.InscricaoMunicipal,
                 PrestadorServicoRazaoSocial: prestadorServico.RazaoSocial,
                 PrestadorServicoEndereco: {
-                    address_line_1: prestadorServico.Endereco.Endereco,
-                    address_line_2: prestadorServico.Endereco.Numero,
-                    district_city: prestadorServico.Endereco.Complemento,
-                    state_province: prestadorServico.Endereco.Bairro,
+                    address_line_1: prestadorServico.Endereco.Endereco &&
+                        prestadorServico.Endereco.Endereco.length > 50
+                        ? prestadorServico.Endereco.Endereco.substring(0, 50)
+                        : prestadorServico.Endereco.Endereco,
+                    address_line_2: prestadorServico.Endereco.Numero &&
+                        prestadorServico.Endereco.Numero.length > 50
+                        ? prestadorServico.Endereco.Numero.substring(0, 50)
+                        : prestadorServico.Endereco.Numero,
+                    district_city: prestadorServico.Endereco.Complemento &&
+                        prestadorServico.Endereco.Complemento.length > 50
+                        ? prestadorServico.Endereco.Complemento.substring(0, 50)
+                        : prestadorServico.Endereco.Complemento,
+                    state_province: prestadorServico.Endereco.Bairro &&
+                        prestadorServico.Endereco.Bairro.length > 50
+                        ? prestadorServico.Endereco.Bairro.substring(0, 50)
+                        : prestadorServico.Endereco.Bairro,
                     postal_Code: prestadorServico.Endereco.Uf,
                     country: prestadorServico.Endereco.Cep,
                 },
@@ -392,12 +404,25 @@ class QiveApi {
                 TomadorInscricaoMunicipal: identificacaoTomador.InscricaoMunicipal,
                 TomadorRazaoSocial: tomador.RazaoSocial,
                 TomadorEndereco: {
-                    address_line_1: tomador.Endereco.Endereco,
-                    address_line_2: tomador.Endereco.Numero,
-                    district_city: tomador.Endereco.Bairro,
-                    state_province: tomador.Endereco.CodigoMunicipio,
-                    postal_Code: tomador.Endereco.Uf,
-                    country: tomador.Endereco.Cep,
+                    address_line_1: tomador.Endereco.Endereco && tomador.Endereco.Endereco.length > 50
+                        ? tomador.Endereco.Endereco.substring(0, 50)
+                        : tomador.Endereco.Endereco,
+                    address_line_2: tomador.Endereco.Numero && tomador.Endereco.Numero.length > 50
+                        ? tomador.Endereco.Numero.substring(0, 50)
+                        : tomador.Endereco.Numero,
+                    district_city: tomador.Endereco.Bairro && tomador.Endereco.Bairro.length > 50
+                        ? tomador.Endereco.Bairro.substring(0, 50)
+                        : tomador.Endereco.Bairro,
+                    state_province: tomador.Endereco.CodigoMunicipio &&
+                        tomador.Endereco.CodigoMunicipio.length > 50
+                        ? tomador.Endereco.CodigoMunicipio.substring(0, 50)
+                        : tomador.Endereco.CodigoMunicipio,
+                    postal_Code: tomador.Endereco.Uf && tomador.Endereco.Uf.length > 50
+                        ? tomador.Endereco.Uf.substring(0, 50)
+                        : tomador.Endereco.Uf,
+                    country: tomador.Endereco.Cep && tomador.Endereco.Cep.length > 50
+                        ? tomador.Endereco.Cep.substring(0, 50)
+                        : tomador.Endereco.Cep,
                 },
                 TomadorEmail: tomador && tomador.Contato && tomador.Contato.Email
                     ? tomador.Contato.Email
