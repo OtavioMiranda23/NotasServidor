@@ -6,6 +6,7 @@ import DisableNfses from "../application/usecases/disableNfses";
 import { UpdateLastCursor } from "../application/usecases/updateLastCursor";
 import { GetLastCursor } from "../application/usecases/getLastCursor";
 import { ca } from "zod/v4/locales";
+import { VerifyCancelledNotas } from "../application/usecases/verifyCancelledNotas";
 
 export const DataNFSeSchema = z.object({
   dateFrom: z.string(),
@@ -21,6 +22,7 @@ export default class NFSeController {
   private disableNfses: DisableNfses;
   private getLastCursor: GetLastCursor;
   private updateLastCursor: UpdateLastCursor;
+  private verifyCancelledNotas: VerifyCancelledNotas;
   constructor(
     getNFSe: GetNFSe,
     dateToSearch: string | undefined,
@@ -28,6 +30,7 @@ export default class NFSeController {
     disableNfses: DisableNfses,
     getLastCursor: GetLastCursor,
     updateLastCursor: UpdateLastCursor,
+    verifyCancelledNotas: VerifyCancelledNotas,
   ) {
     this.getNFSe = getNFSe;
     this.dateToSearch = dateToSearch?.trim() || undefined;
@@ -35,6 +38,7 @@ export default class NFSeController {
     this.disableNfses = disableNfses;
     this.getLastCursor = getLastCursor;
     this.updateLastCursor = updateLastCursor;
+    this.verifyCancelledNotas = verifyCancelledNotas;
   }
 
   public async createNFSe(errorConfig: IBaseConfigApi) {
@@ -103,6 +107,23 @@ export default class NFSeController {
         console.log("Nenhuma NFSe foi desabilitada.");
         return 204;
       }
+      const configHistoricoNotasCanceladas: Omit<IZohoLinksNames, "formName"> =
+        {
+          appName: "base-notas-qive",
+          reportName: "Historico_Notas_Canceladas_Report",
+        };
+      const confirmedCanlledNotas = await this.verifyCancelledNotas.execute(
+        disabledNfses.successItemsUpdate,
+        configHistoricoNotasCanceladas,
+      );
+      if (!confirmedCanlledNotas.success) {
+        console.error("Erro ao confirmar nfse canceladas no Zoho:", {
+          error: confirmedCanlledNotas.error,
+        });
+        return 500;
+      }
+      console.log("Zoho Ids nfse canceladas confirmadas:");
+      console.log(confirmedCanlledNotas.idsZohoNotasUpdated);
       const linkNamesCursor: Omit<IZohoLinksNames, "reportName"> = {
         appName: "base-notas-qive",
         formName: "Cursor_NFSe_Canceladas",

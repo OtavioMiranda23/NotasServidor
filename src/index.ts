@@ -14,6 +14,7 @@ import { UpdateLastCursor } from "./application/usecases/updateLastCursor";
 import { GetLastCursor } from "./application/usecases/getLastCursor";
 import { GetCancelledNFe } from "./application/usecases/getCancelledNFe";
 import DisableNfes from "./application/usecases/disableNfes";
+import { VerifyCancelledNotas } from "./application/usecases/verifyCancelledNotas";
 
 // const logger = new Logger("app.log");
 
@@ -155,6 +156,7 @@ async function main() {
     const getCancelledNFe = new GetCancelledNFe(qive);
     const getLastCursor = new GetLastCursor(zohoApi);
     const updateLastCursor = new UpdateLastCursor(zohoApi);
+    const verifyCancelledNotas = new VerifyCancelledNotas(zohoApi);
     console.log("✓ Use cases criados");
 
     console.log("\nCriando controllers...");
@@ -165,6 +167,7 @@ async function main() {
       disableNfes,
       getLastCursor,
       updateLastCursor,
+      verifyCancelledNotas,
     );
     const nfseController = new NFSeController(
       getNFSe,
@@ -173,6 +176,7 @@ async function main() {
       disableNfses,
       getLastCursor,
       updateLastCursor,
+      verifyCancelledNotas,
     );
     console.log("✓ Controllers criados");
 
