@@ -59,7 +59,7 @@ export interface IApiNota {
     ids: string[],
   ): Promise<string[]>;
   findAllItems(
-    reportName: string,
+    linksNames: Omit<IZohoLinksNames, "formName">,
     criteria?: string,
   ): Promise<{ success: boolean; data: unknown[] }>;
 }
@@ -154,27 +154,40 @@ export default class ZohoApi implements IApiNota {
   }
 
   async findAllItems(
-    reportName: string,
+    linksNames: Omit<IZohoLinksNames, "formName">,
     criteria?: string,
   ): Promise<{ success: boolean; data: unknown[] }> {
-    const requestOptions = {
-      headers: {
-        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    };
-    const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}${
-      criteria ? `?criteria=${criteria}` : ""
-    }`;
-    console.log({ url });
-    const result = await this.#axios.get(url, requestOptions);
-    const data = result.data;
-    console.log({ data });
-    if (data.code !== 3000) {
-      return { success: false, data: data };
+    try {
+      const requestOptions = {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      };
+      const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${
+        criteria ? `?criteria=${criteria}` : ""
+      }`;
+      const result = await this.#axios.get(url, requestOptions);
+      const data = result.data;
+      if (data.code !== 3000) {
+        return { success: false, data: data };
+      }
+      return { success: true, data: data.data };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data.code === 9280) {
+        return { success: false, data: [] };
+      }
+      console.error("Erro ao buscar todos os itens:");
+      //@ts-ignore
+      if (error.response && error.response.data) {
+        //@ts-ignore
+        console.error(error.response.data);
+      } else {
+        console.error(error);
+      }
+      throw error;
     }
-    return { success: true, data: data.data };
   }
 
   async deleteAllRecordsNFeTest(query: string) {
