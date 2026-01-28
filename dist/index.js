@@ -18,6 +18,7 @@ const updateLastCursor_1 = require("./application/usecases/updateLastCursor");
 const getLastCursor_1 = require("./application/usecases/getLastCursor");
 const getCancelledNFe_1 = require("./application/usecases/getCancelledNFe");
 const disableNfes_1 = __importDefault(require("./application/usecases/disableNfes"));
+const verifyCancelledNotas_1 = require("./application/usecases/verifyCancelledNotas");
 const baseDir = process.pkg
     ? path_1.default.dirname(process.execPath)
     : process.cwd();
@@ -106,10 +107,11 @@ async function main() {
         const getCancelledNFe = new getCancelledNFe_1.GetCancelledNFe(qive);
         const getLastCursor = new getLastCursor_1.GetLastCursor(zohoApi);
         const updateLastCursor = new updateLastCursor_1.UpdateLastCursor(zohoApi);
+        const verifyCancelledNotas = new verifyCancelledNotas_1.VerifyCancelledNotas(zohoApi);
         console.log("✓ Use cases criados");
         console.log("\nCriando controllers...");
-        const nfeController = new nfeController_1.default(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor);
-        const nfseController = new nfseController_1.default(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor);
+        const nfeController = new nfeController_1.default(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor, verifyCancelledNotas);
+        const nfseController = new nfseController_1.default(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor, verifyCancelledNotas);
         console.log("✓ Controllers criados");
         console.log(dateToSearch);
         console.log("\n=== PROCESSANDO NFe ===");

@@ -9,13 +9,14 @@ exports.DataNFSeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFSeController {
-    constructor(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor) {
+    constructor(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor, verifyCancelledNotas) {
         this.getNFSe = getNFSe;
         this.dateToSearch = dateToSearch?.trim() || undefined;
         this.getCancelledNFSe = getCancelledNFSe;
         this.disableNfses = disableNfses;
         this.getLastCursor = getLastCursor;
         this.updateLastCursor = updateLastCursor;
+        this.verifyCancelledNotas = verifyCancelledNotas;
     }
     async createNFSe(errorConfig) {
         try {
@@ -75,6 +76,19 @@ class NFSeController {
                 console.log("Nenhuma NFSe foi desabilitada.");
                 return 204;
             }
+            const configHistoricoNotasCanceladas = {
+                appName: "base-notas-qive",
+                reportName: "Historico_Notas_Canceladas_Report",
+            };
+            const confirmedCanlledNotas = await this.verifyCancelledNotas.execute(disabledNfses.successItemsUpdate, configHistoricoNotasCanceladas);
+            if (!confirmedCanlledNotas.success) {
+                console.error("Erro ao confirmar nfse canceladas no Zoho:", {
+                    error: confirmedCanlledNotas.error,
+                });
+                return 500;
+            }
+            console.log("Zoho Ids nfse canceladas confirmadas:");
+            console.log(confirmedCanlledNotas.idsZohoNotasUpdated);
             const linkNamesCursor = {
                 appName: "base-notas-qive",
                 formName: "Cursor_NFSe_Canceladas",
