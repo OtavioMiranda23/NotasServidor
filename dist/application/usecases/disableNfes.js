@@ -42,10 +42,10 @@ class DisableNfes {
         const responseDisable = await this.strategyToDisable(pagamentosFounded, idsFoundedInZohoToCancel);
         return responseDisable;
     }
-    async cancelNfse(idsRecordToDisable, payload) {
+    async cancelNfe(idsRecordToDisable, payload) {
         const linkNames = {
             appName: "base-notas-qive",
-            reportName: "Copy_of_NFSe_Report",
+            reportName: "Copy_of_NFe_Report",
         };
         const successItemsUpdate = await this.zoho.updateItemsByIds(linkNames.reportName, payload, idsRecordToDisable);
         if (successItemsUpdate.length !== idsRecordToDisable.length) {
@@ -58,9 +58,9 @@ class DisableNfes {
         return { successItemsUpdate };
     }
     async strategyToDisable(pagamentosFounded, idsFoundedInZohoToCancel) {
-        const ppagamentosFoundedList = pagamentosFounded.map((p) => p.idNota);
+        const pagamentosFoundedList = pagamentosFounded.map((p) => p.idNota);
         const idsNfeNaoVinculadas = idsFoundedInZohoToCancel.filter((item) => {
-            return !ppagamentosFoundedList.includes(item.idNfe);
+            return !pagamentosFoundedList.includes(item.idNfe);
         });
         console.log("pagamentos encontrados", pagamentosFounded.length);
         console.log("idsFoundedInZohoToCancel:", idsFoundedInZohoToCancel.length);
@@ -71,7 +71,7 @@ class DisableNfes {
             return { successItemsUpdate: [] };
         }
         const payload = { data: { desativado: "SIM" } };
-        const successItemsUpdate = await this.cancelNfse(idsNfeNaoVinculadas.map((item) => item.idRecord), payload);
+        const successItemsUpdate = await this.cancelNfe(idsNfeNaoVinculadas.map((item) => item.idRecord), payload);
         return successItemsUpdate;
     }
     async getPagamentosToDisable(idsToDisable, linkNames) {

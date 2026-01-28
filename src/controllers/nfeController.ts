@@ -89,35 +89,35 @@ export default class NFeController {
         await this.getCancelledNFe.execute(lastZohoCursor);
       console.log("cancelledIds:", { cancelledIds, nextCursorQive });
       // // //verificar se o pagamento está pendente
-      // const linkNamesToDisable: Omit<IZohoLinksNames, "formName"> = {
-      //   appName: "base-notas-qive",
-      //   reportName: "Copy_of_NFe_Report",
-      // };
-      // const configNotasCanceladas: Omit<IZohoLinksNames, "reportName"> = {
-      //   appName: "base-notas-qive",
-      //   formName: "Historico_Notas_Canceladas",
-      // };
-      // const disabledNfes = await this.disableNfes.execute(
-      //   cancelledIds,
-      //   linkNamesToDisable,
-      //   configNotasCanceladas,
-      // );
-      // if (!disabledNfes.successItemsUpdate.length) {
-      //   console.log("Nenhuma NFe foi desabilitada.");
-      //   return 204;
-      // }
-      // const linkNamesCursor: Omit<IZohoLinksNames, "reportName"> = {
-      //   appName: "base-notas-qive",
-      //   formName: "Cursor_NFe_Canceladas",
-      // };
-      // const updatedCursor = await this.updateLastCursor.execute(
-      //   lastZohoCursor,
-      //   nextCursorQive,
-      //   linkNamesCursor,
-      // );
-      // console.log("Success!");
-      // console.log(updatedCursor);
-      // return 200;
+      const linkNamesToDisable: Omit<IZohoLinksNames, "formName"> = {
+        appName: "base-notas-qive",
+        reportName: "Copy_of_NFe_Report",
+      };
+      const configNotasCanceladas: Omit<IZohoLinksNames, "reportName"> = {
+        appName: "base-notas-qive",
+        formName: "Historico_Notas_Canceladas",
+      };
+      const disabledNfes = await this.disableNfes.execute(
+        cancelledIds,
+        linkNamesToDisable,
+        configNotasCanceladas,
+      );
+      if (!disabledNfes.successItemsUpdate.length) {
+        console.log("Nenhuma NFe foi desabilitada.");
+        return 204;
+      }
+      const linkNamesCursor: Omit<IZohoLinksNames, "reportName"> = {
+        appName: "base-notas-qive",
+        formName: "Cursor_NFe_Canceladas",
+      };
+      const updatedCursor = await this.updateLastCursor.execute(
+        lastZohoCursor,
+        nextCursorQive,
+        linkNamesCursor,
+      );
+      console.log("Success!");
+      console.log(updatedCursor);
+      return 200;
     } catch (e) {
       console.error("Erro ao atualizar NFe canceladas:", e);
       return 500;
