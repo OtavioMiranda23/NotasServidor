@@ -231,7 +231,7 @@ export default class QiveApi {
 
           if (responseUpload?.code !== 3000) {
             console.error("Erro ao fazer upload do arquivo NFe:");
-            console.error(responseUpload);
+            console.error(JSON.stringify(responseUpload, null, 2));
             throw new Error("Erro ao fazer upload do arquivo NFe");
           }
         }
@@ -334,7 +334,7 @@ export default class QiveApi {
           const responseNfseUpload = await this.#zohoApi.uploadFile(params);
           if (responseNfseUpload?.code !== 3000) {
             console.error("Erro ao fazer upload do arquivo NFSe:");
-            console.error(responseNfseUpload);
+            console.error(JSON.stringify(responseNfseUpload, null, 2));
             throw new Error("Erro ao fazer upload do arquivo NFSe");
           }
         }

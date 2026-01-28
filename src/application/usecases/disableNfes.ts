@@ -13,7 +13,6 @@ type FoundedNfeToCancel = {
 
 export default class DisableNfes {
   constructor(private readonly zoho: IApiNota) {}
-
   public async execute(
     IdsNfesRequest: string[],
     linkNames: Omit<IZohoLinksNames, "formName">,
@@ -93,6 +92,7 @@ export default class DisableNfes {
       idsFoundedInZohoToCancel.map((item) => item.idNfe),
       linkNamesPagamentos,
     );
+
     const responseDisable = await this.strategyToDisable(
       pagamentosFounded,
       idsFoundedInZohoToCancel,
@@ -101,13 +101,13 @@ export default class DisableNfes {
     // return successItemsUpdated;
   }
 
-  private async cancelNfse(
+  private async cancelNfe(
     idsRecordToDisable: string[],
     payload: { data: { [key: string]: string } },
   ): Promise<{ successItemsUpdate: string[] }> {
     const linkNames: Omit<IZohoLinksNames, "formName"> = {
       appName: "base-notas-qive",
-      reportName: "Copy_of_NFSe_Report",
+      reportName: "Copy_of_NFe_Report",
     };
 
     const successItemsUpdate = await this.zoho.updateItemsByIds(
@@ -136,9 +136,9 @@ export default class DisableNfes {
     }[],
     idsFoundedInZohoToCancel: FoundedNfeToCancel[],
   ): Promise<{ successItemsUpdate: string[] }> {
-    const ppagamentosFoundedList = pagamentosFounded.map((p) => p.idNota);
+    const pagamentosFoundedList = pagamentosFounded.map((p) => p.idNota);
     const idsNfeNaoVinculadas = idsFoundedInZohoToCancel.filter((item) => {
-      return !ppagamentosFoundedList.includes(item.idNfe);
+      return !pagamentosFoundedList.includes(item.idNfe);
     });
     console.log("pagamentos encontrados", pagamentosFounded.length);
     console.log("idsFoundedInZohoToCancel:", idsFoundedInZohoToCancel.length);
@@ -149,7 +149,7 @@ export default class DisableNfes {
       return { successItemsUpdate: [] };
     }
     const payload = { data: { desativado: "SIM" } };
-    const successItemsUpdate = await this.cancelNfse(
+    const successItemsUpdate = await this.cancelNfe(
       idsNfeNaoVinculadas.map((item) => item.idRecord),
       payload,
     );
