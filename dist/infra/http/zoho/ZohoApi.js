@@ -85,6 +85,37 @@ class ZohoApi {
         }
         return true;
     }
+    async findAllItems(linksNames, criteria) {
+        try {
+            const requestOptions = {
+                headers: {
+                    Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            };
+            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${criteria ? `?criteria=${criteria}` : ""}`;
+            const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
+            const data = result.data;
+            if (data.code !== 3000) {
+                return { success: false, data: data };
+            }
+            return { success: true, data: data.data };
+        }
+        catch (error) {
+            if (axios_1.default.isAxiosError(error) && error.response?.data.code === 9280) {
+                return { success: false, data: [] };
+            }
+            console.error("Erro ao buscar todos os itens:");
+            if (error.response && error.response.data) {
+                console.error(error.response.data);
+            }
+            else {
+                console.error(error);
+            }
+            throw error;
+        }
+    }
     async deleteAllRecordsNFeTest(query) {
         const requestOptions = {
             headers: {
@@ -137,6 +168,55 @@ class ZohoApi {
             }
         }
     }
+    async findItemsByIds(reportName, ids) {
+        const requestOptions = {
+            headers: {
+                Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        };
+        const results = [];
+        for await (const id of ids) {
+            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+            const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
+            if (result.data.code === 3000) {
+                results.push(...result.data.data);
+            }
+        }
+        return results;
+    }
+    async updateItemsByIds(reportName, content, ids) {
+        try {
+            const requestOptions = {
+                headers: {
+                    Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            };
+            const results = [];
+            for await (const id of ids) {
+                const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+                const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").patch(url, content, requestOptions);
+                const data = result.data;
+                console.log(`Update Zoho ID ${id}: ${JSON.stringify(data)}`);
+                if (data.code === 3000) {
+                    results.push(data.data.ID);
+                }
+            }
+            return results;
+        }
+        catch (error) {
+            console.error("Erro ao atualizar itens por IDs:");
+            if (axios_1.default.isAxiosError(error)) {
+                console.log(error.response?.data);
+                throw error;
+            }
+            console.error(error);
+            throw error;
+        }
+    }
     async getRecordByField(reportName, field) {
         const requestOptions = {
             headers: {
@@ -166,6 +246,7 @@ class ZohoApi {
         };
         try {
             const res = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").post(url, content, requestOptions);
+            console.log(res);
             if (ZohoApi.isInvalidResponse(res)) {
                 throw new InsertZohoError_1.default("Algum item não retornou 3000:", res.data, 500);
             }
@@ -175,6 +256,7 @@ class ZohoApi {
             console.error("Erro ao inserir registro no Zoho:");
             console.error(e.data.result);
             if (axios_1.default.isAxiosError(e)) {
+                console.error(e.response?.data);
                 throw e;
             }
             const parsed = ZohoErrorSchema.safeParse(e);
@@ -199,6 +281,35 @@ class ZohoApi {
                         throw new Error("Erro 401");
                 }
             }
+            throw e;
+        }
+    }
+    async saveRecord(content, linkNames) {
+        const attempt = 0;
+        if (!__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")) {
+            await this.updateTokenWithRetry(attempt, 3);
+        }
+        if (!__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")) {
+            throw new Error("accessToken is null");
+        }
+        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linkNames.appName}/form/${linkNames.formName}`;
+        const requestOptions = {
+            headers: {
+                Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                "Content-Type": "application/json",
+            },
+        };
+        try {
+            const res = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").post(url, content, requestOptions);
+            return res.data;
+        }
+        catch (e) {
+            if (axios_1.default.isAxiosError(e)) {
+                console.error(e.response?.data);
+                throw e;
+            }
+            console.error("Erro inesperado:");
+            console.error(e);
             throw e;
         }
     }

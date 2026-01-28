@@ -101,10 +101,10 @@ class QiveApi {
         };
         let targetUrl;
         if (dataNFe.cursor) {
-            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&cursor=${dataNFe.cursor}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
+            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&cursor=${dataNFe.cursor}&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
         }
         else {
-            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
+            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&format_type=JSON&limit=${limit}&filter=(= status ERRO)`;
         }
         let nextUrl = targetUrl;
         let count = 1;
@@ -525,6 +525,20 @@ class QiveApi {
                 subPags: QiveApi.getSubPags(xml.pag),
             };
         });
+    }
+    async getCancelledNFSe(cursor) {
+        const url = `https://api.arquivei.com.br/v1/nfse/events?type[]=101101${cursor ? `&cursor=${cursor}` : ""}`;
+        const headers = {
+            "X-API-ID": __classPrivateFieldGet(this, _QiveApi_credentials, "f").apiId,
+            "X-API-KEY": __classPrivateFieldGet(this, _QiveApi_credentials, "f").apiKey,
+        };
+        const res = await axios_1.default.get(url, { headers });
+        const data = res.data;
+        if (data.status && data.status.code && data.status.code !== 200) {
+            console.error("Erro ao buscar nfse canceladas:", data.message);
+            throw new Error(`Erro ao buscar nfse canceladas: ${data.message}`);
+        }
+        return data;
     }
 }
 _QiveApi_zohoApi = new WeakMap(), _QiveApi_createImage = new WeakMap(), _QiveApi_axios = new WeakMap(), _QiveApi_idsFoundedNotas = new WeakMap(), _QiveApi_credentials = new WeakMap(), _QiveApi_successConfig = new WeakMap();

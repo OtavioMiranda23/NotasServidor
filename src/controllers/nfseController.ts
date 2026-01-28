@@ -1,7 +1,11 @@
 import { z } from "zod";
 import GetNFSe from "../application/usecases/getNFSe";
-import { IBaseConfigApi } from "../infra/http/zoho/ZohoApi";
-import { DataNFe } from "../infra/http/qive/QiveApi";
+import { IBaseConfigApi, IZohoLinksNames } from "../infra/http/zoho/ZohoApi";
+import { GetCancelledNFSe } from "../application/usecases/getCancelledNFSe";
+import DisableNfses from "../application/usecases/disableNfses";
+import { UpdateLastCursor } from "../application/usecases/updateLastCursor";
+import { GetLastCursor } from "../application/usecases/getLastCursor";
+import { ca } from "zod/v4/locales";
 
 export const DataNFSeSchema = z.object({
   dateFrom: z.string(),
@@ -12,10 +16,25 @@ export const DataNFSeSchema = z.object({
 
 export default class NFSeController {
   private getNFSe: GetNFSe;
+  private getCancelledNFSe: GetCancelledNFSe;
   private dateToSearch: string | undefined;
-  constructor(getNFSe: GetNFSe, dateToSearch: string | undefined) {
+  private disableNfses: DisableNfses;
+  private getLastCursor: GetLastCursor;
+  private updateLastCursor: UpdateLastCursor;
+  constructor(
+    getNFSe: GetNFSe,
+    dateToSearch: string | undefined,
+    getCancelledNFSe: GetCancelledNFSe,
+    disableNfses: DisableNfses,
+    getLastCursor: GetLastCursor,
+    updateLastCursor: UpdateLastCursor,
+  ) {
     this.getNFSe = getNFSe;
     this.dateToSearch = dateToSearch?.trim() || undefined;
+    this.getCancelledNFSe = getCancelledNFSe;
+    this.disableNfses = disableNfses;
+    this.getLastCursor = getLastCursor;
+    this.updateLastCursor = updateLastCursor;
   }
 
   public async createNFSe(errorConfig: IBaseConfigApi) {
@@ -53,6 +72,52 @@ export default class NFSeController {
           timeStamp: new Date().toISOString(),
         },
       };
+    }
+  }
+
+  public async updateCancelledNFSe() {
+    try {
+      const linksNames: Omit<IZohoLinksNames, "formName"> = {
+        appName: "base-notas-qive",
+        reportName: "Cursor_NFSe_Canceladas_Report",
+      };
+      const lastZohoCursor: number | null =
+        await this.getLastCursor.execute(linksNames);
+      const { cancelledIds, nextCursorQive } =
+        await this.getCancelledNFSe.execute(lastZohoCursor);
+      // //verificar se o pagamento está pendente
+      const linkNamesToDisable: Omit<IZohoLinksNames, "formName"> = {
+        appName: "base-notas-qive",
+        reportName: "Copy_of_NFSe_Report",
+      };
+      const configNotasCanceladas: Omit<IZohoLinksNames, "reportName"> = {
+        appName: "base-notas-qive",
+        formName: "Historico_Notas_Canceladas",
+      };
+      const disabledNfses = await this.disableNfses.execute(
+        cancelledIds,
+        linkNamesToDisable,
+        configNotasCanceladas,
+      );
+      if (!disabledNfses.successItemsUpdate.length) {
+        console.log("Nenhuma NFSe foi desabilitada.");
+        return 204;
+      }
+      const linkNamesCursor: Omit<IZohoLinksNames, "reportName"> = {
+        appName: "base-notas-qive",
+        formName: "Cursor_NFSe_Canceladas",
+      };
+      const updatedCursor = await this.updateLastCursor.execute(
+        lastZohoCursor,
+        nextCursorQive,
+        linkNamesCursor,
+      );
+      console.log("Success!");
+      console.log(updatedCursor);
+      return 200;
+    } catch (e) {
+      console.error("Erro ao atualizar NFSe canceladas:", e);
+      return 500;
     }
   }
 }

@@ -11,19 +11,37 @@ import path from "node:path";
 import { Blob } from "buffer";
 import { blob } from "node:stream/consumers";
 import { Readable } from "node:stream";
-import { log } from "node:console";
+import { error, log } from "node:console";
 // import htmlPdf from "html-pdf-node";
-
+/**
+ *
+ * @deprecated Uso não recomendado devido a erro na tableName que está utilizado como appName. Utilizar IZohoLinksNames no lugar.
+ */
 export interface IBaseConfigApi {
+  //tableName é o nome da aplicação no zoho
   tableName: string;
   formName: string;
 }
 
+export interface IZohoLinksNames {
+  appName: string;
+  formName: string;
+  reportName: string;
+}
+
 export interface IApiNota {
+  /**
+   *
+   * @deprecated Uso não recomendado devido a problemas com ZOD. Utilize saveRecord() no lugar.
+   */
   insertRecord(
     content: object,
     config: IBaseConfigApi,
     attemptsNumber: number,
+  ): Promise<{ result: unknown[] }>;
+  saveRecord(
+    content: { data: { [key: string]: any } },
+    linkNames: Omit<IZohoLinksNames, "reportName">,
   ): Promise<{ result: unknown[] }>;
   uploadFile(data: {
     idCreatedRecord: string;
@@ -34,6 +52,16 @@ export interface IApiNota {
     blob?: Blob | Buffer | Uint8Array | Array<Blob | Buffer | Uint8Array>;
     filePath?: string;
   }): Promise<{ code: number }>;
+  findItemsByIds(reportName: string, ids: string[]): Promise<any[]>;
+  updateItemsByIds(
+    reportName: string,
+    content: { data: { [key: string]: string } },
+    ids: string[],
+  ): Promise<string[]>;
+  findAllItems(
+    linksNames: Omit<IZohoLinksNames, "formName">,
+    criteria?: string,
+  ): Promise<{ success: boolean; data: unknown[] }>;
 }
 
 const ZohoErrorSchema = z.object({
@@ -125,6 +153,43 @@ export default class ZohoApi implements IApiNota {
     return true;
   }
 
+  async findAllItems(
+    linksNames: Omit<IZohoLinksNames, "formName">,
+    criteria?: string,
+  ): Promise<{ success: boolean; data: unknown[] }> {
+    try {
+      const requestOptions = {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      };
+      const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${
+        criteria ? `?criteria=${criteria}` : ""
+      }`;
+      const result = await this.#axios.get(url, requestOptions);
+      const data = result.data;
+      if (data.code !== 3000) {
+        return { success: false, data: data };
+      }
+      return { success: true, data: data.data };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data.code === 9280) {
+        return { success: false, data: [] };
+      }
+      console.error("Erro ao buscar todos os itens:");
+      //@ts-ignore
+      if (error.response && error.response.data) {
+        //@ts-ignore
+        console.error(error.response.data);
+      } else {
+        console.error(error);
+      }
+      throw error;
+    }
+  }
+
   async deleteAllRecordsNFeTest(query: string) {
     const requestOptions = {
       headers: {
@@ -189,6 +254,64 @@ export default class ZohoApi implements IApiNota {
     }
   }
 
+  async findItemsByIds(reportName: string, ids: string[]) {
+    const requestOptions = {
+      headers: {
+        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    };
+    const results = [];
+    for await (const id of ids) {
+      const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+      const result = await this.#axios.get(url, requestOptions);
+      if (result.data.code === 3000) {
+        results.push(...result.data.data);
+      }
+    }
+    return results;
+  }
+
+  async updateItemsByIds(
+    reportName: string,
+    content: { data: { [key: string]: string } },
+    ids: string[],
+  ) {
+    try {
+      const requestOptions = {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      };
+      const results: string[] = [];
+      for await (const id of ids) {
+        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}/${id}`;
+        const result = await this.#axios.patch(url, content, requestOptions);
+        const data = result.data as {
+          code: number;
+          data: { ID: string };
+          message: string;
+        };
+        console.log(`Update Zoho ID ${id}: ${JSON.stringify(data)}`);
+        if (data.code === 3000) {
+          results.push(data.data.ID);
+        }
+      }
+      return results;
+    } catch (error) {
+      console.error("Erro ao atualizar itens por IDs:");
+      if (axios.isAxiosError(error)) {
+        console.log(error.response?.data);
+        throw error;
+      }
+      console.error(error);
+      throw error;
+    }
+  }
+
   async getRecordByField(
     reportName: string,
     field: { key: string; value: string },
@@ -204,7 +327,10 @@ export default class ZohoApi implements IApiNota {
     const result = await this.#axios.get(url, requestOptions);
     return result;
   }
-
+  /**
+   *
+   * @deprecated Uso não recomendado devido a problemas com ZOD. Utilize saveRecord() no lugar.
+   */
   async insertRecord(
     content: object,
     config: IBaseConfigApi,
@@ -227,6 +353,8 @@ export default class ZohoApi implements IApiNota {
     };
     try {
       const res = await this.#axios.post(url, content, requestOptions);
+      console.log(res);
+
       if (ZohoApi.isInvalidResponse(res)) {
         throw new InsertZohoError(
           "Algum item não retornou 3000:",
@@ -240,6 +368,7 @@ export default class ZohoApi implements IApiNota {
       //@ts-ignore
       console.error(e.data.result);
       if (axios.isAxiosError(e)) {
+        console.error(e.response?.data);
         throw e;
       }
       const parsed = ZohoErrorSchema.safeParse(e);
@@ -266,6 +395,39 @@ export default class ZohoApi implements IApiNota {
           if (this.#accessToken === null) throw new Error("Erro 401");
         }
       }
+      throw e;
+    }
+  }
+
+  async saveRecord(
+    content: { data: { [key: string]: any } },
+    linkNames: Omit<IZohoLinksNames, "reportName">,
+  ): Promise<{ result: unknown[] }> {
+    const attempt = 0;
+    if (!this.#accessToken) {
+      await this.updateTokenWithRetry(attempt, 3);
+    }
+    if (!this.#accessToken) {
+      throw new Error("accessToken is null");
+    }
+    const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linkNames.appName}/form/${linkNames.formName}`;
+
+    const requestOptions = {
+      headers: {
+        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+        "Content-Type": "application/json",
+      },
+    };
+    try {
+      const res = await this.#axios.post(url, content, requestOptions);
+      return res.data as { result: unknown[] };
+    } catch (e: unknown) {
+      if (axios.isAxiosError(e)) {
+        console.error(e.response?.data);
+        throw e;
+      }
+      console.error("Erro inesperado:");
+      console.error(e);
       throw e;
     }
   }
