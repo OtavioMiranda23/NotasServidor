@@ -5,15 +5,22 @@ class VerifyCancelledNotas {
     constructor(zoho) {
         this.zoho = zoho;
     }
-    async execute(notasZohoIds, linkNames) {
+    async execute(idsDisabled, linkNames) {
         try {
-            const content = {
-                data: {
-                    cancelada: "SIM",
-                },
-            };
-            const updatedNotas = await this.zoho.updateItemsByIds(linkNames.reportName, content, notasZohoIds);
-            return { success: true, idsZohoNotasUpdated: updatedNotas };
+            let updatedNotas = [];
+            const contents = [];
+            for (const item of idsDisabled) {
+                const content = {
+                    criteria: `(idNota=="${item.idNfse}")`,
+                    data: {
+                        cancelada: "SIM",
+                    },
+                };
+                contents.push(content);
+            }
+            const idsNotaUpdated = await this.zoho.updateItemsByIdsWithCriteria(linkNames.reportName, contents);
+            console.log(`IDs das notas atualizadas no Zoho: ${JSON.stringify(idsNotaUpdated, null, 2)}`);
+            return { success: true, idsZohoNotasUpdated: idsNotaUpdated };
         }
         catch (error) {
             const errorParsed = JSON.stringify(error);

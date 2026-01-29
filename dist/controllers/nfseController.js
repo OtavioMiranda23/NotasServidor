@@ -72,7 +72,7 @@ class NFSeController {
                 formName: "Historico_Notas_Canceladas",
             };
             const disabledNfses = await this.disableNfses.execute(cancelledIds, linkNamesToDisable, configNotasCanceladas);
-            if (!disabledNfses.successItemsUpdate.length) {
+            if (disabledNfses.successItemsUpdate.length === 0) {
                 console.log("Nenhuma NFSe foi desabilitada.");
                 return 204;
             }
@@ -80,15 +80,15 @@ class NFSeController {
                 appName: "base-notas-qive",
                 reportName: "Historico_Notas_Canceladas_Report",
             };
-            const confirmedCanlledNotas = await this.verifyCancelledNotas.execute(disabledNfses.successItemsUpdate, configHistoricoNotasCanceladas);
-            if (!confirmedCanlledNotas.success) {
+            const confirmedCancelledNotas = await this.verifyCancelledNotas.execute(disabledNfses.idsDisabled, configHistoricoNotasCanceladas);
+            if (!confirmedCancelledNotas.success) {
                 console.error("Erro ao confirmar nfse canceladas no Zoho:", {
-                    error: confirmedCanlledNotas.error,
+                    error: confirmedCancelledNotas.error,
                 });
                 return 500;
             }
             console.log("Zoho Ids nfse canceladas confirmadas:");
-            console.log(confirmedCanlledNotas.idsZohoNotasUpdated);
+            console.log(confirmedCancelledNotas.idsZohoNotasUpdated);
             const linkNamesCursor = {
                 appName: "base-notas-qive",
                 formName: "Cursor_NFSe_Canceladas",
@@ -99,7 +99,8 @@ class NFSeController {
             return 200;
         }
         catch (e) {
-            console.error("Erro ao atualizar NFSe canceladas:", e);
+            console.error("Erro ao atualizar NFSe canceladas:");
+            console.error(e);
             return 500;
         }
     }

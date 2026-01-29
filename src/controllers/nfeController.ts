@@ -82,66 +82,66 @@ export default class NFeController {
   }
 
   public async updateCancelledNFe() {
-    try {
-      const linksNames: Omit<IZohoLinksNames, "formName"> = {
-        appName: "base-notas-qive",
-        reportName: "Cursor_NFe_Canceladas_Report",
-      };
-      const lastZohoCursor: number | null =
-        await this.getLastCursor.execute(linksNames);
-      const { cancelledIds, nextCursorQive } =
-        await this.getCancelledNFe.execute(lastZohoCursor);
-      console.log("cancelledIds:", { cancelledIds, nextCursorQive });
-      // // //verificar se o pagamento está pendente
-      const linkNamesToDisable: Omit<IZohoLinksNames, "formName"> = {
-        appName: "base-notas-qive",
-        reportName: "Copy_of_NFe_Report",
-      };
-      const configNotasCanceladas: Omit<IZohoLinksNames, "reportName"> = {
-        appName: "base-notas-qive",
-        formName: "Historico_Notas_Canceladas",
-      };
-      const disabledNfes = await this.disableNfes.execute(
-        cancelledIds,
-        linkNamesToDisable,
-        configNotasCanceladas,
-      );
-      if (!disabledNfes.successItemsUpdate.length) {
-        console.log("Nenhuma NFe foi desabilitada.");
-        return 204;
-      }
-      const configHistoricoNotasCanceladas: Omit<IZohoLinksNames, "formName"> =
-        {
-          appName: "base-notas-qive",
-          reportName: "Historico_Notas_Canceladas_Report",
-        };
-      const confirmedCanlledNotas = await this.verifyCancelledNotas.execute(
-        disabledNfes.successItemsUpdate,
-        configHistoricoNotasCanceladas,
-      );
-      if (!confirmedCanlledNotas.success) {
-        console.error("Erro ao confirmar nfe canceladas no Zoho:", {
-          error: confirmedCanlledNotas.error,
-        });
-        return 500;
-      }
-      console.log("Zoho Ids nfe canceladas confirmadas:");
-      console.log(confirmedCanlledNotas.idsZohoNotasUpdated);
-      const linkNamesCursor: Omit<IZohoLinksNames, "reportName"> = {
-        appName: "base-notas-qive",
-        formName: "Cursor_NFe_Canceladas",
-      };
-      const updatedCursor = await this.updateLastCursor.execute(
-        lastZohoCursor,
-        nextCursorQive,
-        linkNamesCursor,
-      );
-      console.log("Success!");
-      console.log(updatedCursor);
-      return 200;
-    } catch (e) {
-      console.error("Erro ao atualizar NFe canceladas:", e);
-      return 500;
-    }
+    // try {
+    //   const linksNames: Omit<IZohoLinksNames, "formName"> = {
+    //     appName: "base-notas-qive",
+    //     reportName: "Cursor_NFe_Canceladas_Report",
+    //   };
+    //   const lastZohoCursor: number | null =
+    //     await this.getLastCursor.execute(linksNames);
+    //   const { cancelledIds, nextCursorQive } =
+    //     await this.getCancelledNFe.execute(lastZohoCursor);
+    //   console.log("cancelledIds:", { cancelledIds, nextCursorQive });
+    //   // // //verificar se o pagamento está pendente
+    //   const linkNamesToDisable: Omit<IZohoLinksNames, "formName"> = {
+    //     appName: "base-notas-qive",
+    //     reportName: "Copy_of_NFe_Report",
+    //   };
+    //   const configNotasCanceladas: Omit<IZohoLinksNames, "reportName"> = {
+    //     appName: "base-notas-qive",
+    //     formName: "Historico_Notas_Canceladas",
+    //   };
+    //   const disabledNfes = await this.disableNfes.execute(
+    //     cancelledIds,
+    //     linkNamesToDisable,
+    //     configNotasCanceladas,
+    //   );
+    //   if (!disabledNfes.successItemsUpdate.length) {
+    //     console.log("Nenhuma NFe foi desabilitada.");
+    //     return 204;
+    //   }
+    //   const configHistoricoNotasCanceladas: Omit<IZohoLinksNames, "formName"> =
+    //     {
+    //       appName: "base-notas-qive",
+    //       reportName: "Historico_Notas_Canceladas_Report",
+    //     };
+    //   const confirmedCanlledNotas = await this.verifyCancelledNotas.execute(
+    //     disabledNfes.successItemsUpdate,
+    //     configHistoricoNotasCanceladas,
+    //   );
+    //   if (!confirmedCanlledNotas.success) {
+    //     console.error("Erro ao confirmar nfe canceladas no Zoho:", {
+    //       error: confirmedCanlledNotas.error,
+    //     });
+    //     return 500;
+    //   }
+    //   console.log("Zoho Ids nfe canceladas confirmadas:");
+    //   console.log(confirmedCanlledNotas.idsZohoNotasUpdated);
+    //   const linkNamesCursor: Omit<IZohoLinksNames, "reportName"> = {
+    //     appName: "base-notas-qive",
+    //     formName: "Cursor_NFe_Canceladas",
+    //   };
+    //   const updatedCursor = await this.updateLastCursor.execute(
+    //     lastZohoCursor,
+    //     nextCursorQive,
+    //     linkNamesCursor,
+    //   );
+    //   console.log("Success!");
+    //   console.log(updatedCursor);
+    //   return 200;
+    // } catch (e) {
+    //   console.error("Erro ao atualizar NFe canceladas:", e);
+    //   return 500;
+    // }
   }
 }
