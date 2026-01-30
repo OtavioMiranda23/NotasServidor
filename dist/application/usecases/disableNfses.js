@@ -19,7 +19,7 @@ class DisableNfses {
                 };
                 await this.zoho.saveRecord(content, configNotasCanceladas);
                 idsFoundedInZohoToCancel.push({
-                    idNfse,
+                    idNota: idNfse,
                     idRecord: allNfesFindedToDisable.data[0].ID,
                 });
             }
@@ -38,7 +38,7 @@ class DisableNfses {
             appName: "base-notas-qive",
             reportName: "Documentos_Vinculados_Report",
         };
-        const pagamentosFounded = await this.getPagamentosToDisable(idsFoundedInZohoToCancel.map((item) => item.idNfse), linkNamesPagamentos);
+        const pagamentosFounded = await this.getPagamentosToDisable(idsFoundedInZohoToCancel.map((item) => item.idNota), linkNamesPagamentos);
         const responseDisable = await this.strategyToDisable(pagamentosFounded, idsFoundedInZohoToCancel);
         return responseDisable;
     }
@@ -60,7 +60,7 @@ class DisableNfses {
     async strategyToDisable(pagamentosFounded, idsFoundedInZohoToCancel) {
         const pagamentosFoundedList = pagamentosFounded.map((p) => p.idNota);
         const idsNfseNaoVinculadas = idsFoundedInZohoToCancel.filter((item) => {
-            return !pagamentosFoundedList.includes(item.idNfse);
+            return !pagamentosFoundedList.includes(item.idNota);
         });
         console.log("pagamentos encontrados", pagamentosFounded.length);
         console.log("idsFoundedInZohoToCancel:", idsFoundedInZohoToCancel.length);

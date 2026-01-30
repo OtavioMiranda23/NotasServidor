@@ -63,6 +63,10 @@ class NFSeController {
             };
             const lastZohoCursor = await this.getLastCursor.execute(linksNames);
             const { cancelledIds, nextCursorQive } = await this.getCancelledNFSe.execute(lastZohoCursor);
+            if (cancelledIds.length === 0) {
+                console.log("Nenhuma NFSe foi desabilitada.");
+                return 204;
+            }
             const linkNamesToDisable = {
                 appName: "base-notas-qive",
                 reportName: "Copy_of_NFSe_Report",
@@ -72,10 +76,6 @@ class NFSeController {
                 formName: "Historico_Notas_Canceladas",
             };
             const disabledNfses = await this.disableNfses.execute(cancelledIds, linkNamesToDisable, configNotasCanceladas);
-            if (disabledNfses.successItemsUpdate.length === 0) {
-                console.log("Nenhuma NFSe foi desabilitada.");
-                return 204;
-            }
             const configHistoricoNotasCanceladas = {
                 appName: "base-notas-qive",
                 reportName: "Historico_Notas_Canceladas_Report",

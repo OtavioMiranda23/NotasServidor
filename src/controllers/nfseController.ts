@@ -89,7 +89,10 @@ export default class NFSeController {
         await this.getLastCursor.execute(linksNames);
       const { cancelledIds, nextCursorQive } =
         await this.getCancelledNFSe.execute(lastZohoCursor);
-      // //verificar se o pagamento está pendente
+      if (cancelledIds.length === 0) {
+        console.log("Nenhuma NFSe foi desabilitada.");
+        return 204;
+      }
       const linkNamesToDisable: Omit<IZohoLinksNames, "formName"> = {
         appName: "base-notas-qive",
         reportName: "Copy_of_NFSe_Report",
@@ -103,10 +106,7 @@ export default class NFSeController {
         linkNamesToDisable,
         configNotasCanceladas,
       );
-      if (disabledNfses.successItemsUpdate.length === 0) {
-        console.log("Nenhuma NFSe foi desabilitada.");
-        return 204;
-      }
+
       const configHistoricoNotasCanceladas: Omit<IZohoLinksNames, "formName"> =
         {
           appName: "base-notas-qive",

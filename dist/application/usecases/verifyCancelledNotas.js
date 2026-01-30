@@ -7,11 +7,10 @@ class VerifyCancelledNotas {
     }
     async execute(idsDisabled, linkNames) {
         try {
-            let updatedNotas = [];
             const contents = [];
             for (const item of idsDisabled) {
                 const content = {
-                    criteria: `(idNota=="${item.idNfse}")`,
+                    criteria: `(idNota=="${item.idNota}")`,
                     data: {
                         cancelada: "SIM",
                     },

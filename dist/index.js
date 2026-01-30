@@ -146,6 +146,16 @@ async function main() {
             console.error("✗ Erro ao atualizar NFSe canceladas.");
             console.error(nfseUpdateCancelledResult);
         }
+        if (nfeUpdateCancelledResult === 200) {
+            console.log("✓ NFe canceladas atualizadas com sucesso.");
+        }
+        else if (nfeUpdateCancelledResult === 204) {
+            console.log("Nenhuma NFe cancelada para atualizar.");
+        }
+        else {
+            console.error("✗ Erro ao atualizar NFe canceladas.");
+            console.error(nfeUpdateCancelledResult);
+        }
         console.log("\n✓ PROCESSAMENTO CONCLUÍDO COM SUCESSO!");
     }
     catch (error) {

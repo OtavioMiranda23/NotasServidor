@@ -4,6 +4,7 @@ import {
   IBaseConfigApi,
   IZohoLinksNames,
 } from "../../infra/http/zoho/ZohoApi";
+import { FoundedNotasToCancel } from "./verifyCancelledNotas";
 
 export type Pagamento = {
   ID: string;
@@ -11,11 +12,6 @@ export type Pagamento = {
   pagamento_ja_realizado?: string;
   pendente?: string;
   Enviado_ao_Envio_Notas?: string;
-};
-
-export type FoundedNfseToCancel = {
-  idNfse: string;
-  idRecord: string;
 };
 
 export default class DisableNfses {
@@ -26,10 +22,10 @@ export default class DisableNfses {
     linkNames: Omit<IZohoLinksNames, "formName">,
     configNotasCanceladas: Omit<IZohoLinksNames, "reportName">,
   ): Promise<{
-    idsDisabled: FoundedNfseToCancel[];
+    idsDisabled: FoundedNotasToCancel[];
     successItemsUpdate: string[];
   }> {
-    const idsFoundedInZohoToCancel: FoundedNfseToCancel[] = [];
+    const idsFoundedInZohoToCancel: FoundedNotasToCancel[] = [];
     for await (const [i, idNfse] of IdsNfsesRequest.entries()) {
       console.log(i);
       const allNfesFindedToDisable = await this.zoho.findAllItems(
@@ -46,7 +42,7 @@ export default class DisableNfses {
         };
         await this.zoho.saveRecord(content, configNotasCanceladas);
         idsFoundedInZohoToCancel.push({
-          idNfse,
+          idNota: idNfse,
           //@ts-ignore
           idRecord: allNfesFindedToDisable.data[0].ID as string,
         });
@@ -60,47 +56,13 @@ export default class DisableNfses {
         };
         await this.zoho.saveRecord(content, configNotasCanceladas);
       }
-
-      // if (i < 2) {
-      //   console.log(i);
-      //   const allNfesFindedToDisable = await this.zoho.findAllItems(
-      //     linkNames,
-      //     //%26%26 = &&
-      //     `(IdNota == "${idNfse}" %26%26 desativado != "SIM")`,
-      //   );
-
-      //   if (allNfesFindedToDisable.success) {
-      //     const content = {
-      //       data: {
-      //         idNota: idNfse,
-      //         tipoNota: "nfse",
-      //         encontrada: "SIM",
-      //       },
-      //     };
-      //     await this.zoho.saveRecord(content, configNotasCanceladas);
-      //     idsFoundedInZohoToCancel.push({
-      //       idNfse,
-      //       //@ts-ignore
-      //       idRecord: allNfesFindedToDisable.data[0].ID as string,
-      //     });
-      //   } else {
-      //     const content = {
-      //       data: {
-      //         idNota: idNfse,
-      //         tipoNota: "nfse",
-      //         encontrada: "NAO",
-      //       },
-      //     };
-      //     await this.zoho.saveRecord(content, configNotasCanceladas);
-      //   }
-      // }
     }
     const linkNamesPagamentos: Omit<IZohoLinksNames, "formName"> = {
       appName: "base-notas-qive",
       reportName: "Documentos_Vinculados_Report",
     };
     const pagamentosFounded = await this.getPagamentosToDisable(
-      idsFoundedInZohoToCancel.map((item) => item.idNfse),
+      idsFoundedInZohoToCancel.map((item) => item.idNota),
       linkNamesPagamentos,
     );
     const responseDisable = await this.strategyToDisable(
@@ -112,10 +74,10 @@ export default class DisableNfses {
   }
 
   private async cancelNfse(
-    idsToDisable: FoundedNfseToCancel[],
+    idsToDisable: FoundedNotasToCancel[],
     payload: { data: { [key: string]: string } },
   ): Promise<{
-    idsDisabled: FoundedNfseToCancel[];
+    idsDisabled: FoundedNotasToCancel[];
     successItemsUpdate: string[];
   }> {
     const linkNames: Omit<IZohoLinksNames, "formName"> = {
@@ -147,14 +109,14 @@ export default class DisableNfses {
       pendente: string;
       enviadoEnvioNotas: string;
     }[],
-    idsFoundedInZohoToCancel: FoundedNfseToCancel[],
+    idsFoundedInZohoToCancel: FoundedNotasToCancel[],
   ): Promise<{
-    idsDisabled: FoundedNfseToCancel[];
+    idsDisabled: FoundedNotasToCancel[];
     successItemsUpdate: string[];
   }> {
     const pagamentosFoundedList = pagamentosFounded.map((p) => p.idNota);
     const idsNfseNaoVinculadas = idsFoundedInZohoToCancel.filter((item) => {
-      return !pagamentosFoundedList.includes(item.idNfse);
+      return !pagamentosFoundedList.includes(item.idNota);
     });
     console.log("pagamentos encontrados", pagamentosFounded.length);
     console.log("idsFoundedInZohoToCancel:", idsFoundedInZohoToCancel.length);

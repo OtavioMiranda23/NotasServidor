@@ -1,20 +1,22 @@
 import { id } from "zod/v4/locales";
 import ZohoApi, { IZohoLinksNames } from "../../infra/http/zoho/ZohoApi";
-import { FoundedNfseToCancel } from "./disableNfses";
 
+export type FoundedNotasToCancel = {
+  idNota: string;
+  idRecord: string;
+};
 export class VerifyCancelledNotas {
   constructor(private readonly zoho: ZohoApi) {}
 
   public async execute(
-    idsDisabled: FoundedNfseToCancel[],
+    idsDisabled: FoundedNotasToCancel[],
     linkNames: Omit<IZohoLinksNames, "formName">,
   ): Promise<{ success: boolean; idsZohoNotasUpdated: string[]; error?: any }> {
     try {
-      let updatedNotas: string[] = [];
       const contents = [];
       for (const item of idsDisabled) {
         const content = {
-          criteria: `(idNota=="${item.idNfse}")`,
+          criteria: `(idNota=="${item.idNota}")`,
           data: {
             cancelada: "SIM",
           },
