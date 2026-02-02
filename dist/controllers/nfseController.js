@@ -62,7 +62,9 @@ class NFSeController {
                 reportName: "Cursor_NFSe_Canceladas_Report",
             };
             const lastZohoCursor = await this.getLastCursor.execute(linksNames);
+            console.log("lastZohoCursor nfse::::", lastZohoCursor);
             const { cancelledIds, nextCursorQive } = await this.getCancelledNFSe.execute(lastZohoCursor);
+            console.log("cancelledIds nfse recebidos::::", cancelledIds.length);
             if (cancelledIds.length === 0) {
                 console.log("Nenhuma NFSe foi desabilitada.");
                 return 204;

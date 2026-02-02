@@ -10,6 +10,12 @@ class GetLastCursor {
         if (!allCursors.success || allCursors.data.length === 0) {
             return null;
         }
+        allCursors.data.sort((a, b) => {
+            if (a.Added_Time && b.Added_Time) {
+                return (new Date(b.Added_Time).getTime() - new Date(a.Added_Time).getTime());
+            }
+            return 0;
+        });
         const first = allCursors.data[0];
         return first.ultimo_cursor;
     }

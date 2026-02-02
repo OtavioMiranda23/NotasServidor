@@ -91,6 +91,7 @@ export default class NFeController {
         await this.getLastCursor.execute(linksNames);
       const { cancelledIds, nextCursorQive } =
         await this.getCancelledNFe.execute(lastZohoCursor);
+      console.log("cancelledIds nfe recebidos::::", cancelledIds.length);
       if (cancelledIds.length === 0) {
         console.log("Nenhuma NFe foi desabilitada.");
         return 204;

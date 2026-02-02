@@ -115,7 +115,6 @@ async function main() {
         console.log("✓ Controllers criados");
         console.log(dateToSearch);
         console.log("\n=== PROCESSANDO NFe ===");
-        const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
         const nfeResult = await nfeController.createNFe(errorNFeConfig);
         if (nfeResult.status === 200) {
             console.log("✓ NFe processada com sucesso:");
@@ -127,7 +126,6 @@ async function main() {
         }
         console.log("\n=== PROCESSANDO NFSe ===");
         const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
-        const nfseUpdateCancelledResult = await nfseController.updateCancelledNFSe();
         if (createNfseResult.status === 200) {
             console.log("✓ NFSe processada com sucesso:");
             console.log(JSON.stringify(createNfseResult.data, null, 2));
@@ -136,6 +134,8 @@ async function main() {
             console.error("✗ Erro ao processar NFSe:");
             console.error(JSON.stringify(createNfseResult.error, null, 2));
         }
+        console.log("\n=== ATUALIZANDO NFSe CANCELADAS ===");
+        const nfseUpdateCancelledResult = await nfseController.updateCancelledNFSe();
         if (nfseUpdateCancelledResult === 200) {
             console.log("✓ NFSe canceladas atualizadas com sucesso.");
         }
@@ -146,6 +146,8 @@ async function main() {
             console.error("✗ Erro ao atualizar NFSe canceladas.");
             console.error(nfseUpdateCancelledResult);
         }
+        console.log("\n=== ATUALIZANDO NFe CANCELADAS ===");
+        const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
         if (nfeUpdateCancelledResult === 200) {
             console.log("✓ NFe canceladas atualizadas com sucesso.");
         }
