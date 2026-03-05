@@ -941,6 +941,10 @@ class CreateImage {
                   <span class="label">RPS Número:</span>
                   <span class="valor">${this.safeValue(nota.RpsNumero)}</span>
                 </div>
+                <div class="nfse-campo">
+                  <span class="label">Inscrição Municipal:</span>
+                  <span class="valor">${this.safeValue(nota.TomadorInscricaoMunicipal)}</span>
+                </div>
               </div>
               <div class="nfse-grid-campos uma-coluna">
                 <div class="nfse-campo">

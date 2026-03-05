@@ -72,6 +72,7 @@ export type NotaNFSe = {
   PrestadorInscricaoMunicipal?: string;
   PrestadorServicoEndereco?: Endereco;
   PrestadorServicoRazaoSocial?: string;
+  TomadorInscricaoMunicipal?: string;
   ValorCredito?: string;
   ValorIss?: string;
   RpsNumero?: string;
@@ -1136,6 +1137,10 @@ export default class CreateImage {
                 <div class="nfse-campo">
                   <span class="label">RPS Número:</span>
                   <span class="valor">${this.safeValue(nota.RpsNumero)}</span>
+                </div>
+                <div class="nfse-campo">
+                  <span class="label">Inscrição Municipal:</span>
+                  <span class="valor">${this.safeValue(nota.TomadorInscricaoMunicipal)}</span>
                 </div>
               </div>
               <div class="nfse-grid-campos uma-coluna">
