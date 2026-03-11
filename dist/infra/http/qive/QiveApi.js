@@ -21,6 +21,8 @@ const QiveApiError_1 = __importDefault(require("../../errorHandling/QiveApiError
 const InsertZohoError_1 = __importDefault(require("../../errorHandling/InsertZohoError"));
 const formatDateToCustom_1 = __importDefault(require("../../utils/formatDateToCustom"));
 const formatDateOnlyDDMMMYYYY_1 = __importDefault(require("../../utils/formatDateOnlyDDMMMYYYY"));
+const node_path_1 = __importDefault(require("node:path"));
+const municipios_1 = require("../../utils/municipios");
 const ResSuccessUpdateQive = zod_1.z.object({
     status: zod_1.z.object({
         code: zod_1.z.number(),
@@ -330,6 +332,8 @@ class QiveApi {
         return null;
     }
     static getValuesNFSe(data) {
+        const pathMunicipios = node_path_1.default.resolve(__dirname, "../../../../municipios.json");
+        const municipios = new municipios_1.Municipios(pathMunicipios);
         return data.map((d) => {
             const infNfse = d.xml.Nfse.InfNfse;
             const valoresNfse = infNfse.ValoresNfse;
@@ -396,6 +400,10 @@ class QiveApi {
                 ItemListaServico: servicos.ItemListaServico,
                 Discriminacao: servicos.Discriminacao,
                 ExigibilidadeISS: servicos.ExigibilidadeISS,
+                CodigoMunicipio: servicos.CodigoMunicipio || "",
+                NomeMunicipio: municipios.obterNomePorCodigo(servicos.MunicipioIncidencia) || "",
+                MunicipioIncidencia: servicos.MunicipioIncidencia || "",
+                NomeMunicipioIncidencia: municipios.obterNomePorCodigo(servicos.MunicipioIncidencia),
                 PrestadorCpnj: prestador.CpfCnpj.Cnpj,
                 PrestadorCpf: prestador.CpfCnpj.Cpf,
                 PrestadorInscricaoMunicipal: prestador.InscricaoMunicipal,

@@ -10,6 +10,7 @@ import path from "node:path";
 import { buffer } from "node:stream/consumers";
 import { QiveNfseEventsResponse } from "../../../application/usecases/getCancelledNFSe";
 import { QiveNfeEventsResponse } from "../../../application/usecases/getCancelledNFe";
+import { Municipios } from "../../utils/municipios";
 
 type FoundedNotas = {
   nfe: { idNota: string[]; idRecord: string[] };
@@ -286,6 +287,20 @@ export default class QiveApi {
         dataNFSe.dateTo
       }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
     }
+    //APAGARRRRRRRRRRRRRRRRRRRRRRRRRR
+    // if (dataNFSe.cursor) {
+    //   targetUrl = `https://api.arquivei.com.br/${
+    //     dataNFSe.isV2 ? "v2" : "v1"
+    //   }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
+    //     dataNFSe.dateTo
+    //   }&cursor=${dataNFSe.cursor}&format_type=JSON&limit=${limit}`;
+    // } else {
+    //   targetUrl = `https://api.arquivei.com.br/${
+    //     dataNFSe.isV2 ? "v2" : "v1"
+    //   }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
+    //     dataNFSe.dateTo
+    //   }&format_type=JSON&limit=${limit}`;
+    // }
     let nextUrl = targetUrl;
     let count = 1;
     let fieldsFormArr;
@@ -443,6 +458,11 @@ export default class QiveApi {
   }
 
   static getValuesNFSe(data: any) {
+    const pathMunicipios = path.resolve(
+      __dirname,
+      "../../../../municipios.json",
+    );
+    const municipios = new Municipios(pathMunicipios);
     return data.map((d: any) => {
       const infNfse = d.xml.Nfse.InfNfse;
       const valoresNfse = infNfse.ValoresNfse;
@@ -519,6 +539,13 @@ export default class QiveApi {
         ItemListaServico: servicos.ItemListaServico,
         Discriminacao: servicos.Discriminacao,
         ExigibilidadeISS: servicos.ExigibilidadeISS,
+        CodigoMunicipio: servicos.CodigoMunicipio || "",
+        NomeMunicipio:
+          municipios.obterNomePorCodigo(servicos.MunicipioIncidencia) || "",
+        MunicipioIncidencia: servicos.MunicipioIncidencia || "",
+        NomeMunicipioIncidencia: municipios.obterNomePorCodigo(
+          servicos.MunicipioIncidencia,
+        ),
         PrestadorCpnj: prestador.CpfCnpj.Cnpj,
         PrestadorCpf: prestador.CpfCnpj.Cpf,
         PrestadorInscricaoMunicipal: prestador.InscricaoMunicipal,

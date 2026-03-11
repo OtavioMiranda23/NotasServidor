@@ -61,6 +61,10 @@ export type NotaNFSe = {
   Aliquota?: string;
   BaseCalculo?: string;
   CodigoVerificacao?: string;
+  CodigoMunicipio?: string;
+  NomeMunicipio?: string;
+  MunicipioIncidencia?: string;
+  NomeMunicipioIncidencia?: string;
   PrestadorServicoCnpj?: string;
   DataEmissao?: string;
   Discriminacao?: string;
@@ -1206,6 +1210,13 @@ export default class CreateImage {
           <!-- Discriminação dos Serviços -->
           <div class="nfse-discriminacao">
             <div class="nfse-discriminacao-cabecalho">Discriminação dos Serviços</div>
+            
+            <div class="nfse-discriminacao-conteudo">
+              <span>Código Munícipio: ${nota.CodigoMunicipio || "-"}</span>
+              <span>Nome Munícipio: ${nota.NomeMunicipio || "-"}</span>
+              <span>Código Munícipio Incidente: ${nota.MunicipioIncidencia || "-"}</span>
+              <span>Nome Munícipio Incidente: ${nota.NomeMunicipioIncidencia || "-"}</span>
+            </div>
             <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${
               nota.ItemListaServico
             }</strong></div>
