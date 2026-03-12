@@ -71,7 +71,9 @@ export type NotaNFSe = {
   ID?: string;
   IdNota?: string;
   ItemListaServico?: string;
+  IncentivoFiscal?: string;
   Numero?: string;
+  OptanteSimplesNacional?: string;
   PrestadorCpnj?: string;
   PrestadorInscricaoMunicipal?: string;
   PrestadorServicoEndereco?: Endereco;
@@ -1118,6 +1120,14 @@ export default class CreateImage {
                     nota.PrestadorInscricaoMunicipal,
                   )}</span>
                 </div>
+                <div class="nfse-campo">
+                  <span class="label">Optante pelo Simples:</span>
+                  <span class="valor">${this.decideValue1or2(
+                    nota.OptanteSimplesNacional,
+                  )}</span>
+                  <span class="label">Incentivo Fiscal:</span>
+                  <span class="valor">${this.decideValue1or2(nota.IncentivoFiscal)}</span>
+                </div>
               </div>
               <div class="nfse-grid-campos uma-coluna">
                 <div class="nfse-campo">
@@ -1251,5 +1261,10 @@ export default class CreateImage {
   private parseEndereco(endereco: Endereco | undefined): string {
     if (!endereco) throw new Error("Endereço não encontrado");
     return `${endereco.address_line_1 ? endereco.address_line_1.trim() + "," : ""} ${endereco.address_line_2 ? endereco.address_line_2.trim() + "," : ""} ${endereco.country ? endereco.country.trim() + "," : ""} ${endereco.district_city ? endereco.district_city.trim() + " -" : ""} ${endereco.postal_Code ? endereco.postal_Code.trim() + " -" : ""} ${endereco.state_province ? endereco.state_province.trim() : ""}`;
+  }
+
+  private decideValue1or2(value: string | undefined) {
+    if (!value) return "-";
+    return value === "1" ? "Sim" : value === "2" ? "Não" : value;
   }
 }
