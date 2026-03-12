@@ -997,11 +997,22 @@ export default class CreateImage {
 
           .nfse-discriminacao-conteudo {
             padding: 10px;
-            min-height: 80px;
             font-size: 10px;
             line-height: 1.3;
-            white-space: pre-wrap;
             font-family: 'Arial', sans-serif;
+          }
+
+          .nfse-discriminacao-conteudo-info {
+            white-space: normal;
+          }
+
+          .nfse-discriminacao-conteudo-info span {
+            display: block;
+          }
+
+          .nfse-discriminacao-conteudo-texto {
+            min-height: 80px;
+            white-space: pre-wrap;
           }
 
           /* Observações e outras informações */
@@ -1211,7 +1222,7 @@ export default class CreateImage {
           <div class="nfse-discriminacao">
             <div class="nfse-discriminacao-cabecalho">Discriminação dos Serviços</div>
             
-            <div class="nfse-discriminacao-conteudo">
+            <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-info">
               <span>Código Munícipio: ${nota.CodigoMunicipio || "-"}</span>
               <span>Nome Munícipio: ${nota.NomeMunicipio || "-"}</span>
               <span>Código Munícipio Incidente: ${nota.MunicipioIncidencia || "-"}</span>
@@ -1220,7 +1231,7 @@ export default class CreateImage {
             <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${
               nota.ItemListaServico
             }</strong></div>
-            <div class="nfse-discriminacao-conteudo">${this.safeValue(
+            <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-texto">${this.safeValue(
               nota.Discriminacao,
             )}</div>
           </div>
