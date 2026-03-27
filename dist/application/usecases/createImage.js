@@ -942,6 +942,12 @@ class CreateImage {
                   <span class="valor">${this.parseEndereco(nota.PrestadorServicoEndereco)}</span>
                 </div>
               </div>
+              <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-info">
+                <span>Código Munícipio: ${nota.CodigoMunicipio || "-"}</span>
+                <span>Nome Munícipio: ${nota.NomeMunicipio || "-"}</span>
+                <span>Código Munícipio Incidente: ${nota.MunicipioIncidencia || "-"}</span>
+                <span>Nome Munícipio Incidente: ${nota.NomeMunicipioIncidencia || "-"}</span>
+            </div>
             </div>
           </div>
 
@@ -1020,13 +1026,6 @@ class CreateImage {
           <!-- Discriminação dos Serviços -->
           <div class="nfse-discriminacao">
             <div class="nfse-discriminacao-cabecalho">Discriminação dos Serviços</div>
-            
-            <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-info">
-              <span>Código Munícipio: ${nota.CodigoMunicipio || "-"}</span>
-              <span>Nome Munícipio: ${nota.NomeMunicipio || "-"}</span>
-              <span>Código Munícipio Incidente: ${nota.MunicipioIncidencia || "-"}</span>
-              <span>Nome Munícipio Incidente: ${nota.NomeMunicipioIncidencia || "-"}</span>
-            </div>
             <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${nota.ItemListaServico}</strong></div>
             <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-texto">${this.safeValue(nota.Discriminacao)}</div>
           </div>
