@@ -282,7 +282,6 @@ class ZohoApi {
         };
         try {
             const res = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").post(url, content, requestOptions);
-            console.log(res);
             if (ZohoApi.isInvalidResponse(res)) {
                 throw new InsertZohoError_1.default("Algum item não retornou 3000:", res.data, 500);
             }

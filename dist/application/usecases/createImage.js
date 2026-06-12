@@ -571,7 +571,11 @@ class CreateImage {
     formatCNPJ(cnpj) {
         if (!cnpj)
             return "-";
-        return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+        const digitsOnly = cnpj.replace(/\D/g, "");
+        const normalized = digitsOnly.length > 14 ? digitsOnly.slice(1) : digitsOnly;
+        if (normalized.length !== 14)
+            return cnpj;
+        return normalized.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
     }
     formatDataHora(dataHora) {
         if (!dataHora)
@@ -621,6 +625,7 @@ class CreateImage {
         return id?.split("NFe")[1] || "Não encontrada";
     }
     buildNFSeTemplate(nota) {
+        console.log(`ItemListaServicoDescricao: ${nota.ItemListaServicoDescricao}`);
         const formatCurrency = (value) => {
             if (!value)
                 return "-";
@@ -828,6 +833,13 @@ class CreateImage {
             white-space: pre-wrap;
           }
 
+          .nfse-discriminacao-descricao {
+            padding: 10px 10px 10px 28px;
+            font-size: 10px;
+            line-height: 1.3;
+            font-family: 'Arial', sans-serif;
+          }
+
           /* Observações e outras informações */
           .nfse-observacoes {
             border: 1px solid #000;
@@ -1026,7 +1038,11 @@ class CreateImage {
           <!-- Discriminação dos Serviços -->
           <div class="nfse-discriminacao">
             <div class="nfse-discriminacao-cabecalho">Discriminação dos Serviços</div>
-            <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${nota.ItemListaServico}</strong></div>
+            <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${nota.ItemListaServico}</strong>
+            </div>
+            <div class="nfse-discriminacao-descricao">
+              <span class="label">Descrição:</span> <span>${nota.ItemListaServicoDescricao}</span>
+            </div>
             <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-texto">${this.safeValue(nota.Discriminacao)}</div>
           </div>
 

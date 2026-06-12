@@ -196,7 +196,8 @@ class QiveApi {
             count = res.data.count;
             if (!res.data.data.length)
                 continue;
-            fieldsFormArr = QiveApi.getValuesNFSe(res.data.data);
+            fieldsFormArr = await QiveApi.getValuesNFSe(res.data.data, this.findDescricaoCod.bind(this));
+            console.log(`Notas NFSe encontradas: ${fieldsFormArr}`);
             const idsNotas = fieldsFormArr.map((el) => el.IdNota);
             const idsParaAtualizarNotas = fieldsFormArr.map((el) => ({
                 id: el.IdNota,
@@ -331,10 +332,10 @@ class QiveApi {
         }
         return null;
     }
-    static getValuesNFSe(data) {
+    static async getValuesNFSe(data, findDescricaoCod) {
         const pathMunicipios = node_path_1.default.resolve(__dirname, "../../../../municipios.json");
         const municipios = new municipios_1.Municipios(pathMunicipios);
-        return data.map((d) => {
+        return Promise.all(data.map(async (d) => {
             const infNfse = d.xml.Nfse.InfNfse;
             const valoresNfse = infNfse.ValoresNfse;
             const prestadorServico = infNfse.PrestadorServico;
@@ -349,6 +350,8 @@ class QiveApi {
             const prestador = infDeclaracaoPrestacaoServico.Prestador;
             const tomador = infDeclaracaoPrestacaoServico.Tomador;
             const identificacaoTomador = tomador.IdentificacaoTomador;
+            const itemListaServicoDescricao = (await findDescricaoCod(servicos.ItemListaServico)) ||
+                "SERVIÇO NÃO ENCONTRADO";
             return {
                 IdNota: d.id,
                 Tipo: "nfse",
@@ -398,6 +401,7 @@ class QiveApi {
                 ServicoValores: servicos.Valores,
                 IssRetido: servicos.IssRetido,
                 ItemListaServico: servicos.ItemListaServico,
+                ItemListaServicoDescricao: itemListaServicoDescricao,
                 Discriminacao: servicos.Discriminacao,
                 ExigibilidadeISS: servicos.ExigibilidadeISS,
                 CodigoMunicipio: servicos.CodigoMunicipio || "",
@@ -438,7 +442,7 @@ class QiveApi {
                 OptanteSimplesNacional: infDeclaracaoPrestacaoServico.OptanteSimplesNacional,
                 IncentivoFiscal: infDeclaracaoPrestacaoServico.IncentivoFiscal,
             };
-        });
+        }));
     }
     static getValues(dataArr) {
         return dataArr.map((d) => {
@@ -561,6 +565,29 @@ class QiveApi {
             throw new Error(`Erro ao buscar nfe canceladas: ${data.message}`);
         }
         return data;
+    }
+    async findDescricaoCod(codigo, numNota) {
+        if (!codigo) {
+            throw new Error("Código não fornecido");
+        }
+        const res = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").findAllItems({
+            appName: "base-notas-qive",
+            reportName: "Convers_o_C_digo_Servi_o_Report",
+        }, `Codigo == ${codigo}`);
+        if (!res.success) {
+            console.error(`Erro ao buscar descrição do código ${codigo} para a nota ${numNota}:`, res);
+            throw new Error(`Erro ao buscar descrição do código ${codigo} para a nota ${numNota}`);
+        }
+        if (res.success) {
+            const data = res.data;
+            if (Array.isArray(data) &&
+                data.length === 1 &&
+                typeof data[0] === "object" &&
+                data[0] !== null &&
+                "Descricao" in data[0]) {
+                return data[0].Descricao;
+            }
+        }
     }
 }
 _QiveApi_zohoApi = new WeakMap(), _QiveApi_createImage = new WeakMap(), _QiveApi_axios = new WeakMap(), _QiveApi_idsFoundedNotas = new WeakMap(), _QiveApi_credentials = new WeakMap(), _QiveApi_successConfig = new WeakMap();
