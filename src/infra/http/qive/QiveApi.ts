@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { z } from "zod";
-import { IApiNota, IBaseConfigApi } from "../zoho/ZohoApi";
+import ZohoApi, { IApiNota, IBaseConfigApi } from "../zoho/ZohoApi";
 import QiveApiError from "../../errorHandling/QiveApiError";
 import InsertZohoError from "../../errorHandling/InsertZohoError";
 import formatDateToCustom from "../../utils/formatDateToCustom";
@@ -293,13 +293,13 @@ export default class QiveApi {
     //     dataNFSe.isV2 ? "v2" : "v1"
     //   }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
     //     dataNFSe.dateTo
-    //   }&cursor=${dataNFSe.cursor}&format_type=JSON&limit=${limit}`;
+    //   }&cursor=${dataNFSe.cursor}&format_type=JSON&limit=${3}`;
     // } else {
     //   targetUrl = `https://api.arquivei.com.br/${
     //     dataNFSe.isV2 ? "v2" : "v1"
     //   }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
     //     dataNFSe.dateTo
-    //   }&format_type=JSON&limit=${limit}`;
+    //   }&format_type=JSON&limit=${3}`;
     // }
     let nextUrl = targetUrl;
     let count = 1;
@@ -309,7 +309,11 @@ export default class QiveApi {
       nextUrl = res.data.page.next;
       count = res.data.count;
       if (!res.data.data.length) continue;
-      fieldsFormArr = QiveApi.getValuesNFSe(res.data.data);
+      fieldsFormArr = await QiveApi.getValuesNFSe(
+        res.data.data,
+        this.findDescricaoCod.bind(this),
+      );
+      console.log(`Notas NFSe encontradas: ${fieldsFormArr}`);
       const idsNotas = fieldsFormArr.map((el: any) => el.IdNota);
       const idsParaAtualizarNotas: { id: string; value: string }[] =
         fieldsFormArr.map((el: any) => ({
@@ -457,138 +461,150 @@ export default class QiveApi {
     return null;
   }
 
-  static getValuesNFSe(data: any) {
+  static async getValuesNFSe(
+    data: any,
+    findDescricaoCod: (
+      codigo: string,
+      numNota?: string,
+    ) => Promise<string | undefined>,
+  ) {
     const pathMunicipios = path.resolve(
       __dirname,
       "../../../../municipios.json",
     );
     const municipios = new Municipios(pathMunicipios);
-    return data.map((d: any) => {
-      const infNfse = d.xml.Nfse.InfNfse;
-      const valoresNfse = infNfse.ValoresNfse;
-      const prestadorServico = infNfse.PrestadorServico;
-      const identificacaoPrestador =
-        infNfse.PrestadorServico.IdentificacaoPrestador;
-      const declaracaoPrestacaoServico = infNfse.DeclaracaoPrestacaoServico;
-      const infDeclaracaoPrestacaoServico =
-        infNfse.DeclaracaoPrestacaoServico.InfDeclaracaoPrestacaoServico;
-      const rps = infDeclaracaoPrestacaoServico.Rps
-        ? infDeclaracaoPrestacaoServico.Rps
-        : null;
-      const identificacaoRps =
-        rps && rps.IdentificacaoRps ? rps.IdentificacaoRps : null;
-      const servicos = infDeclaracaoPrestacaoServico.Servico;
-      const prestador = infDeclaracaoPrestacaoServico.Prestador;
-      const tomador = infDeclaracaoPrestacaoServico.Tomador;
-      const identificacaoTomador = tomador.IdentificacaoTomador;
-      return {
-        IdNota: d.id,
-        Tipo: "nfse",
-        Numero: infNfse.Numero,
-        CodigoVerificacao: infNfse.CodigoVerificacao,
-        DataEmissao: formatDateToCustom(infNfse.DataEmissao),
-        ValorCredito: infNfse.ValorCredito,
-        BaseCalculo: valoresNfse.BaseCalculo,
-        Aliquota: valoresNfse.Aliquota,
-        ValorIss: valoresNfse.ValorIss,
-        PrestadorServicoCnpj: identificacaoPrestador.CpfCnpj.Cnpj,
-        PrestadorServicoCPF: identificacaoPrestador.CpfCnpj.Cpf,
-        IdentificacaoPrestadorInscricaoMunicipal:
-          identificacaoPrestador.InscricaoMunicipal,
-        PrestadorServicoRazaoSocial: prestadorServico.RazaoSocial,
-        PrestadorServicoEndereco: {
-          address_line_1:
-            prestadorServico.Endereco.Endereco &&
-            prestadorServico.Endereco.Endereco.length > 50
-              ? prestadorServico.Endereco.Endereco.substring(0, 50)
-              : prestadorServico.Endereco.Endereco,
-          address_line_2:
-            prestadorServico.Endereco.Numero &&
-            prestadorServico.Endereco.Numero.length > 50
-              ? prestadorServico.Endereco.Numero.substring(0, 50)
-              : prestadorServico.Endereco.Numero,
-          district_city:
-            prestadorServico.Endereco.Complemento &&
-            prestadorServico.Endereco.Complemento.length > 50
-              ? prestadorServico.Endereco.Complemento.substring(0, 50)
-              : prestadorServico.Endereco.Complemento,
-          state_province:
-            prestadorServico.Endereco.Bairro &&
-            prestadorServico.Endereco.Bairro.length > 50
-              ? prestadorServico.Endereco.Bairro.substring(0, 50)
-              : prestadorServico.Endereco.Bairro,
-          postal_Code: prestadorServico.Endereco.Uf,
-          country: prestadorServico.Endereco.Cep,
-        },
-        PrestadorServicoEmail:
-          (prestadorServico &&
-            prestadorServico.Contato &&
-            prestadorServico.Contato.Email) ||
-          null,
-        RpsNumero: identificacaoRps ? identificacaoRps.Numero : null,
-        RpsSerie: identificacaoRps ? identificacaoRps.Serie : null,
-        RpsTipo: identificacaoRps ? identificacaoRps.Tipo : null,
-        RpsDataEmissao:
-          rps && rps.DataEmissao
-            ? formatDateOnlyDDMMMYYYY(rps.DataEmissao)
-            : null,
-        RpsStatus: rps && rps.Status ? rps.Status : null,
-        Competencia: declaracaoPrestacaoServico.Competencia,
-        ServicoValores: servicos.Valores,
-        IssRetido: servicos.IssRetido,
-        ItemListaServico: servicos.ItemListaServico,
-        Discriminacao: servicos.Discriminacao,
-        ExigibilidadeISS: servicos.ExigibilidadeISS,
-        CodigoMunicipio: servicos.CodigoMunicipio || "",
-        NomeMunicipio:
-          municipios.obterNomePorCodigo(servicos.MunicipioIncidencia) || "",
-        MunicipioIncidencia: servicos.MunicipioIncidencia || "",
-        NomeMunicipioIncidencia: municipios.obterNomePorCodigo(
-          servicos.MunicipioIncidencia,
-        ),
-        PrestadorCpnj: prestador.CpfCnpj.Cnpj,
-        PrestadorCpf: prestador.CpfCnpj.Cpf,
-        PrestadorInscricaoMunicipal: prestador.InscricaoMunicipal,
-        TomadorCnpj: identificacaoTomador.CpfCnpj.Cnpj,
-        TomadorCpf: identificacaoTomador.CpfCnpj.Cpf,
-        TomadorInscricaoMunicipal: identificacaoTomador.InscricaoMunicipal,
-        TomadorRazaoSocial: tomador.RazaoSocial,
-        TomadorEndereco: {
-          address_line_1:
-            tomador.Endereco.Endereco && tomador.Endereco.Endereco.length > 50
-              ? tomador.Endereco.Endereco.substring(0, 50)
-              : tomador.Endereco.Endereco,
-          address_line_2:
-            tomador.Endereco.Numero && tomador.Endereco.Numero.length > 50
-              ? tomador.Endereco.Numero.substring(0, 50)
-              : tomador.Endereco.Numero,
-          district_city:
-            tomador.Endereco.Bairro && tomador.Endereco.Bairro.length > 50
-              ? tomador.Endereco.Bairro.substring(0, 50)
-              : tomador.Endereco.Bairro,
-          state_province:
-            tomador.Endereco.CodigoMunicipio &&
-            tomador.Endereco.CodigoMunicipio.length > 50
-              ? tomador.Endereco.CodigoMunicipio.substring(0, 50)
-              : tomador.Endereco.CodigoMunicipio,
-          postal_Code:
-            tomador.Endereco.Uf && tomador.Endereco.Uf.length > 50
-              ? tomador.Endereco.Uf.substring(0, 50)
-              : tomador.Endereco.Uf,
-          country:
-            tomador.Endereco.Cep && tomador.Endereco.Cep.length > 50
-              ? tomador.Endereco.Cep.substring(0, 50)
-              : tomador.Endereco.Cep,
-        },
-        TomadorEmail:
-          tomador && tomador.Contato && tomador.Contato.Email
-            ? tomador.Contato.Email
-            : null,
-        OptanteSimplesNacional:
-          infDeclaracaoPrestacaoServico.OptanteSimplesNacional,
-        IncentivoFiscal: infDeclaracaoPrestacaoServico.IncentivoFiscal,
-      };
-    });
+    return Promise.all(
+      data.map(async (d: any) => {
+        const infNfse = d.xml.Nfse.InfNfse;
+        const valoresNfse = infNfse.ValoresNfse;
+        const prestadorServico = infNfse.PrestadorServico;
+        const identificacaoPrestador =
+          infNfse.PrestadorServico.IdentificacaoPrestador;
+        const declaracaoPrestacaoServico = infNfse.DeclaracaoPrestacaoServico;
+        const infDeclaracaoPrestacaoServico =
+          infNfse.DeclaracaoPrestacaoServico.InfDeclaracaoPrestacaoServico;
+        const rps = infDeclaracaoPrestacaoServico.Rps
+          ? infDeclaracaoPrestacaoServico.Rps
+          : null;
+        const identificacaoRps =
+          rps && rps.IdentificacaoRps ? rps.IdentificacaoRps : null;
+        const servicos = infDeclaracaoPrestacaoServico.Servico;
+        const prestador = infDeclaracaoPrestacaoServico.Prestador;
+        const tomador = infDeclaracaoPrestacaoServico.Tomador;
+        const identificacaoTomador = tomador.IdentificacaoTomador;
+        const itemListaServicoDescricao =
+          (await findDescricaoCod(servicos.ItemListaServico)) ||
+          "SERVIÇO NÃO ENCONTRADO";
+        return {
+          IdNota: d.id,
+          Tipo: "nfse",
+          Numero: infNfse.Numero,
+          CodigoVerificacao: infNfse.CodigoVerificacao,
+          DataEmissao: formatDateToCustom(infNfse.DataEmissao),
+          ValorCredito: infNfse.ValorCredito,
+          BaseCalculo: valoresNfse.BaseCalculo,
+          Aliquota: valoresNfse.Aliquota,
+          ValorIss: valoresNfse.ValorIss,
+          PrestadorServicoCnpj: identificacaoPrestador.CpfCnpj.Cnpj,
+          PrestadorServicoCPF: identificacaoPrestador.CpfCnpj.Cpf,
+          IdentificacaoPrestadorInscricaoMunicipal:
+            identificacaoPrestador.InscricaoMunicipal,
+          PrestadorServicoRazaoSocial: prestadorServico.RazaoSocial,
+          PrestadorServicoEndereco: {
+            address_line_1:
+              prestadorServico.Endereco.Endereco &&
+              prestadorServico.Endereco.Endereco.length > 50
+                ? prestadorServico.Endereco.Endereco.substring(0, 50)
+                : prestadorServico.Endereco.Endereco,
+            address_line_2:
+              prestadorServico.Endereco.Numero &&
+              prestadorServico.Endereco.Numero.length > 50
+                ? prestadorServico.Endereco.Numero.substring(0, 50)
+                : prestadorServico.Endereco.Numero,
+            district_city:
+              prestadorServico.Endereco.Complemento &&
+              prestadorServico.Endereco.Complemento.length > 50
+                ? prestadorServico.Endereco.Complemento.substring(0, 50)
+                : prestadorServico.Endereco.Complemento,
+            state_province:
+              prestadorServico.Endereco.Bairro &&
+              prestadorServico.Endereco.Bairro.length > 50
+                ? prestadorServico.Endereco.Bairro.substring(0, 50)
+                : prestadorServico.Endereco.Bairro,
+            postal_Code: prestadorServico.Endereco.Uf,
+            country: prestadorServico.Endereco.Cep,
+          },
+          PrestadorServicoEmail:
+            (prestadorServico &&
+              prestadorServico.Contato &&
+              prestadorServico.Contato.Email) ||
+            null,
+          RpsNumero: identificacaoRps ? identificacaoRps.Numero : null,
+          RpsSerie: identificacaoRps ? identificacaoRps.Serie : null,
+          RpsTipo: identificacaoRps ? identificacaoRps.Tipo : null,
+          RpsDataEmissao:
+            rps && rps.DataEmissao
+              ? formatDateOnlyDDMMMYYYY(rps.DataEmissao)
+              : null,
+          RpsStatus: rps && rps.Status ? rps.Status : null,
+          Competencia: declaracaoPrestacaoServico.Competencia,
+          ServicoValores: servicos.Valores,
+          IssRetido: servicos.IssRetido,
+          ItemListaServico: servicos.ItemListaServico,
+          ItemListaServicoDescricao: itemListaServicoDescricao,
+          Discriminacao: servicos.Discriminacao,
+          ExigibilidadeISS: servicos.ExigibilidadeISS,
+          CodigoMunicipio: servicos.CodigoMunicipio || "",
+          NomeMunicipio:
+            municipios.obterNomePorCodigo(servicos.MunicipioIncidencia) || "",
+          MunicipioIncidencia: servicos.MunicipioIncidencia || "",
+          NomeMunicipioIncidencia: municipios.obterNomePorCodigo(
+            servicos.MunicipioIncidencia,
+          ),
+          PrestadorCpnj: prestador.CpfCnpj.Cnpj,
+          PrestadorCpf: prestador.CpfCnpj.Cpf,
+          PrestadorInscricaoMunicipal: prestador.InscricaoMunicipal,
+          TomadorCnpj: identificacaoTomador.CpfCnpj.Cnpj,
+          TomadorCpf: identificacaoTomador.CpfCnpj.Cpf,
+          TomadorInscricaoMunicipal: identificacaoTomador.InscricaoMunicipal,
+          TomadorRazaoSocial: tomador.RazaoSocial,
+          TomadorEndereco: {
+            address_line_1:
+              tomador.Endereco.Endereco && tomador.Endereco.Endereco.length > 50
+                ? tomador.Endereco.Endereco.substring(0, 50)
+                : tomador.Endereco.Endereco,
+            address_line_2:
+              tomador.Endereco.Numero && tomador.Endereco.Numero.length > 50
+                ? tomador.Endereco.Numero.substring(0, 50)
+                : tomador.Endereco.Numero,
+            district_city:
+              tomador.Endereco.Bairro && tomador.Endereco.Bairro.length > 50
+                ? tomador.Endereco.Bairro.substring(0, 50)
+                : tomador.Endereco.Bairro,
+            state_province:
+              tomador.Endereco.CodigoMunicipio &&
+              tomador.Endereco.CodigoMunicipio.length > 50
+                ? tomador.Endereco.CodigoMunicipio.substring(0, 50)
+                : tomador.Endereco.CodigoMunicipio,
+            postal_Code:
+              tomador.Endereco.Uf && tomador.Endereco.Uf.length > 50
+                ? tomador.Endereco.Uf.substring(0, 50)
+                : tomador.Endereco.Uf,
+            country:
+              tomador.Endereco.Cep && tomador.Endereco.Cep.length > 50
+                ? tomador.Endereco.Cep.substring(0, 50)
+                : tomador.Endereco.Cep,
+          },
+          TomadorEmail:
+            tomador && tomador.Contato && tomador.Contato.Email
+              ? tomador.Contato.Email
+              : null,
+          OptanteSimplesNacional:
+            infDeclaracaoPrestacaoServico.OptanteSimplesNacional,
+          IncentivoFiscal: infDeclaracaoPrestacaoServico.IncentivoFiscal,
+        };
+      }),
+    );
   }
 
   static getValues(dataArr: any) {
@@ -720,5 +736,38 @@ export default class QiveApi {
       throw new Error(`Erro ao buscar nfe canceladas: ${data.message}`);
     }
     return data as QiveNfeEventsResponse;
+  }
+  async findDescricaoCod(codigo: string, numNota?: string) {
+    if (!codigo) {
+      throw new Error("Código não fornecido");
+    }
+    const res = await this.#zohoApi.findAllItems(
+      {
+        appName: "base-notas-qive",
+        reportName: "Convers_o_C_digo_Servi_o_Report",
+      },
+      `Codigo == ${codigo}`,
+    );
+    if (!res.success) {
+      console.error(
+        `Erro ao buscar descrição do código ${codigo} para a nota ${numNota}:`,
+        res,
+      );
+      throw new Error(
+        `Erro ao buscar descrição do código ${codigo} para a nota ${numNota}`,
+      );
+    }
+    if (res.success) {
+      const data = res.data;
+      if (
+        Array.isArray(data) &&
+        data.length === 1 &&
+        typeof data[0] === "object" &&
+        data[0] !== null &&
+        "Descricao" in data[0]
+      ) {
+        return (data[0] as { Descricao: string }).Descricao;
+      }
+    }
   }
 }

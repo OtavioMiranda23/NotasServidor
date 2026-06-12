@@ -402,8 +402,6 @@ export default class ZohoApi implements IApiNota {
     };
     try {
       const res = await this.#axios.post(url, content, requestOptions);
-      console.log(res);
-
       if (ZohoApi.isInvalidResponse(res)) {
         throw new InsertZohoError(
           "Algum item não retornou 3000:",

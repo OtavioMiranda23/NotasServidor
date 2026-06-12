@@ -71,6 +71,7 @@ export type NotaNFSe = {
   ID?: string;
   IdNota?: string;
   ItemListaServico?: string;
+  ItemListaServicoDescricao: string;
   IncentivoFiscal?: string;
   Numero?: string;
   OptanteSimplesNacional?: string;
@@ -723,7 +724,11 @@ export default class CreateImage {
 
   private formatCNPJ(cnpj?: string): string {
     if (!cnpj) return "-";
-    return cnpj.replace(
+    const digitsOnly = cnpj.replace(/\D/g, "");
+    const normalized =
+      digitsOnly.length > 14 ? digitsOnly.slice(1) : digitsOnly;
+    if (normalized.length !== 14) return cnpj;
+    return normalized.replace(
       /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
       "$1.$2.$3/$4-$5",
     );
@@ -800,6 +805,7 @@ export default class CreateImage {
   }
 
   private buildNFSeTemplate(nota: NotaNFSe): string {
+    console.log(`ItemListaServicoDescricao: ${nota.ItemListaServicoDescricao}`);
     const formatCurrency = (value?: string) => {
       if (!value) return "-";
       const parsed = Number(value);
@@ -1015,6 +1021,13 @@ export default class CreateImage {
           .nfse-discriminacao-conteudo-texto {
             min-height: 80px;
             white-space: pre-wrap;
+          }
+
+          .nfse-discriminacao-descricao {
+            padding: 10px 10px 10px 28px;
+            font-size: 10px;
+            line-height: 1.3;
+            font-family: 'Arial', sans-serif;
           }
 
           /* Observações e outras informações */
@@ -1239,7 +1252,11 @@ export default class CreateImage {
             <div class="nfse-discriminacao-cabecalho">Discriminação dos Serviços</div>
             <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${
               nota.ItemListaServico
-            }</strong></div>
+            }</strong>
+            </div>
+            <div class="nfse-discriminacao-descricao">
+              <span class="label">Descrição:</span> <span>${nota.ItemListaServicoDescricao}</span>
+            </div>
             <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-texto">${this.safeValue(
               nota.Discriminacao,
             )}</div>
