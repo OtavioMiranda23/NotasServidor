@@ -350,8 +350,7 @@ class QiveApi {
             const prestador = infDeclaracaoPrestacaoServico.Prestador;
             const tomador = infDeclaracaoPrestacaoServico.Tomador;
             const identificacaoTomador = tomador.IdentificacaoTomador;
-            const itemListaServicoDescricao = (await findDescricaoCod(servicos.ItemListaServico)) ||
-                "SERVIÇO NÃO ENCONTRADO";
+            const itemListaServicoDescricao = (await findDescricaoCod(servicos.ItemListaServico, infNfse.CodigoVerificacao)) || "SERVIÇO NÃO ENCONTRADO";
             return {
                 IdNota: d.id,
                 Tipo: "nfse",
@@ -566,17 +565,22 @@ class QiveApi {
         }
         return data;
     }
-    async findDescricaoCod(codigo, numNota) {
+    async findDescricaoCod(codigo, codVerificao) {
         if (!codigo) {
             throw new Error("Código não fornecido");
+        }
+        let criterio = `Codigo == ${codigo} && Nacional == ${true}`;
+        const isNacional = codVerificao && codVerificao.length > 12;
+        if (!isNacional) {
+            criterio = `Codigo == ${codigo} && Nacional == ${false}`;
         }
         const res = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").findAllItems({
             appName: "base-notas-qive",
             reportName: "Convers_o_C_digo_Servi_o_Report",
-        }, `Codigo == ${codigo}`);
+        }, criterio);
         if (!res.success) {
-            console.error(`Erro ao buscar descrição do código ${codigo} para a nota ${numNota}:`, res);
-            throw new Error(`Erro ao buscar descrição do código ${codigo} para a nota ${numNota}`);
+            console.error(`Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}:`, res);
+            throw new Error(`Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}`);
         }
         if (res.success) {
             const data = res.data;

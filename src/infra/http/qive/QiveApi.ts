@@ -465,7 +465,7 @@ export default class QiveApi {
     data: any,
     findDescricaoCod: (
       codigo: string,
-      numNota?: string,
+      codVerificao: string,
     ) => Promise<string | undefined>,
   ) {
     const pathMunicipios = path.resolve(
@@ -493,8 +493,10 @@ export default class QiveApi {
         const tomador = infDeclaracaoPrestacaoServico.Tomador;
         const identificacaoTomador = tomador.IdentificacaoTomador;
         const itemListaServicoDescricao =
-          (await findDescricaoCod(servicos.ItemListaServico)) ||
-          "SERVIÇO NÃO ENCONTRADO";
+          (await findDescricaoCod(
+            servicos.ItemListaServico,
+            infNfse.CodigoVerificacao,
+          )) || "SERVIÇO NÃO ENCONTRADO";
         return {
           IdNota: d.id,
           Tipo: "nfse",
@@ -737,24 +739,29 @@ export default class QiveApi {
     }
     return data as QiveNfeEventsResponse;
   }
-  async findDescricaoCod(codigo: string, numNota?: string) {
+  async findDescricaoCod(codigo: string, codVerificao: string) {
     if (!codigo) {
       throw new Error("Código não fornecido");
+    }
+    let criterio = `Codigo == ${codigo} && Nacional == ${true}`;
+    const isNacional = codVerificao && codVerificao.length > 12;
+    if (!isNacional) {
+      criterio = `Codigo == ${codigo} && Nacional == ${false}`;
     }
     const res = await this.#zohoApi.findAllItems(
       {
         appName: "base-notas-qive",
         reportName: "Convers_o_C_digo_Servi_o_Report",
       },
-      `Codigo == ${codigo}`,
+      criterio,
     );
     if (!res.success) {
       console.error(
-        `Erro ao buscar descrição do código ${codigo} para a nota ${numNota}:`,
+        `Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}:`,
         res,
       );
       throw new Error(
-        `Erro ao buscar descrição do código ${codigo} para a nota ${numNota}`,
+        `Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}`,
       );
     }
     if (res.success) {

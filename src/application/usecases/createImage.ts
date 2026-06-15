@@ -82,6 +82,7 @@ export type NotaNFSe = {
   TomadorInscricaoMunicipal?: string;
   ValorCredito?: string;
   ValorIss?: string;
+  IssRetido?: string;
   RpsNumero?: string;
   ServicoValores?: string;
   Tipo?: "nfse";
@@ -1219,6 +1220,10 @@ export default class CreateImage {
               <div class="nfse-valor-fiscal">
                 <span class="label">ISS (R$)</span>
                 <span>${formatCurrency(impostos?.iss || undefined)}</span>
+              </div>
+              <div class="nfse-valor-fiscal">
+                <span class="label">ISS Retido</span>
+                <span>${this.decideValue1or2(nota.IssRetido || "-")}</span>
               </div>
               <div class="nfse-valor-fiscal">
                 <span class="label">INSS (R$)</span>

@@ -1009,6 +1009,10 @@ class CreateImage {
                 <span>${formatCurrency(impostos?.iss || undefined)}</span>
               </div>
               <div class="nfse-valor-fiscal">
+                <span class="label">ISS Retido</span>
+                <span>${this.decideValue1or2(nota.IssRetido || "-")}</span>
+              </div>
+              <div class="nfse-valor-fiscal">
                 <span class="label">INSS (R$)</span>
                 <span>${formatCurrency(impostos?.inss || undefined)}</span>
               </div>
