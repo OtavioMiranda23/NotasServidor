@@ -59,6 +59,18 @@ class QiveApi {
         __classPrivateFieldSet(this, _QiveApi_credentials, credentials, "f");
         __classPrivateFieldSet(this, _QiveApi_createImage, createImage, "f");
     }
+    static buildReceivedUrl(notaType, data, limit) {
+        const url = new URL(`https://api.arquivei.com.br/${data.isV2 ? "v2" : "v1"}/${notaType}/received`);
+        url.searchParams.set("created_at[from]", data.dateFrom);
+        url.searchParams.set("created_at[to]", data.dateTo);
+        url.searchParams.set("format_type", "JSON");
+        url.searchParams.set("limit", limit.toString());
+        url.searchParams.set("filter", "(NOT_EXISTS status INSERIDA)");
+        if (data.cursor) {
+            url.searchParams.set("cursor", data.cursor);
+        }
+        return url.toString();
+    }
     async updateNota(content, typeNota) {
         let targetUrl = "";
         if (typeNota === "nfe") {
@@ -101,13 +113,7 @@ class QiveApi {
                 "Content-Type": "application/json",
             },
         };
-        let targetUrl;
-        if (dataNFe.cursor) {
-            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&cursor=${dataNFe.cursor}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-        }
-        else {
-            targetUrl = `https://api.arquivei.com.br/${dataNFe.isV2 ? "v2" : "v1"}/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${dataNFe.dateTo}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-        }
+        const targetUrl = QiveApi.buildReceivedUrl("nfe", dataNFe, limit);
         let nextUrl = targetUrl;
         let count = 1;
         let fieldsFormArr;
@@ -180,13 +186,7 @@ class QiveApi {
                 "Content-Type": "application/json",
             },
         };
-        let targetUrl;
-        if (dataNFSe.cursor) {
-            targetUrl = `https://api.arquivei.com.br/${dataNFSe.isV2 ? "v2" : "v1"}/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${dataNFSe.dateTo}&cursor=${dataNFSe.cursor}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-        }
-        else {
-            targetUrl = `https://api.arquivei.com.br/${dataNFSe.isV2 ? "v2" : "v1"}/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${dataNFSe.dateTo}&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-        }
+        const targetUrl = QiveApi.buildReceivedUrl("nfse", dataNFSe, limit);
         let nextUrl = targetUrl;
         let count = 1;
         let fieldsFormArr;
