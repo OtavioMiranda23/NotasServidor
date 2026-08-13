@@ -43,6 +43,10 @@ export interface IApiNota {
     content: { data: { [key: string]: any } },
     linkNames: Omit<IZohoLinksNames, "reportName">,
   ): Promise<{ result: unknown[] }>;
+  saveRecords(
+    contents: { data: { [key: string]: any } }[],
+    linkNames: Omit<IZohoLinksNames, "reportName">,
+  ): Promise<{ result: unknown[] }>;
   uploadFile(data: {
     idCreatedRecord: string;
     app_name: string;
@@ -98,6 +102,12 @@ export default class ZohoApi implements IApiNota {
   #credentials: ZohoCredentials;
   constructor(credentials: ZohoCredentials) {
     this.#credentials = credentials;
+  }
+  saveRecords(
+    contents: { data: { [key: string]: any } }[],
+    linkNames: Omit<IZohoLinksNames, "reportName">,
+  ): Promise<{ result: unknown[] }> {
+    //TODO: Implementar saveRecords
   }
 
   static async init(credentials: ZohoCredentials) {
@@ -166,7 +176,7 @@ export default class ZohoApi implements IApiNota {
         },
       };
       const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${
-        criteria ? `?criteria=${criteria}` : ""
+        criteria ? `?criteria=${encodeURIComponent(criteria)}` : ""
       }`;
       const result = await this.#axios.get(url, requestOptions);
       const data = result.data;

@@ -98,6 +98,50 @@ export default class QiveApi {
     this.#createImage = createImage;
   }
 
+  private static buildReceivedUrl(
+    notaType: "nfe" | "nfse",
+    data: { dateFrom: string; dateTo: string; cursor?: string; isV2: boolean },
+    limit: number,
+  ) {
+    const url = new URL(
+      `https://api.arquivei.com.br/${data.isV2 ? "v2" : "v1"}/${notaType}/received`,
+    );
+    url.searchParams.set("created_at[from]", data.dateFrom);
+    url.searchParams.set("created_at[to]", data.dateTo);
+    url.searchParams.set("format_type", "JSON");
+    url.searchParams.set("limit", limit.toString());
+    url.searchParams.set("filter", "(NOT_EXISTS status INSERIDA)");
+    if (data.cursor) {
+      url.searchParams.set("cursor", data.cursor);
+    }
+    return url.toString();
+  }
+  private static buildReceivedUrlTest(
+    notaType: "nfe" | "nfse",
+    data: { dateFrom: string; dateTo: string; cursor?: string; isV2: boolean },
+    limit: number,
+    filtred: boolean,
+    cnpjTeste?: string,
+  ) {
+    const url = new URL(
+      `https://api.arquivei.com.br/${data.isV2 ? "v2" : "v1"}/${notaType}/received`,
+    );
+    url.searchParams.set("created_at[from]", data.dateFrom);
+    url.searchParams.set("created_at[to]", data.dateTo);
+    url.searchParams.set("format_type", "JSON");
+    url.searchParams.set("limit", limit.toString());
+    if (cnpjTeste) {
+      url.searchParams.set("cnpj[]", cnpjTeste);
+    }
+    if (filtred) {
+      url.searchParams.set("filter", "(NOT_EXISTS status INSERIDA)");
+    }
+    // if (data.cursor) {
+    //   url.searchParams.set("cursor", data.cursor);
+    // }
+    return url.toString();
+  }
+
   async updateNota(
     content: { access_key?: string; id?: string; value: string }[],
     typeNota: "nfe" | "nfse",
@@ -150,36 +194,14 @@ export default class QiveApi {
         "Content-Type": "application/json",
       },
     };
-    let targetUrl;
-    if (dataNFe.cursor) {
-      targetUrl = `https://api.arquivei.com.br/${
-        dataNFe.isV2 ? "v2" : "v1"
-      }/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${
-        dataNFe.dateTo
-      }&cursor=${
-        dataNFe.cursor
-      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-    } else {
-      targetUrl = `https://api.arquivei.com.br/${
-        dataNFe.isV2 ? "v2" : "v1"
-      }/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${
-        dataNFe.dateTo
-      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-    }
-
-    // if (dataNFe.cursor) {
-    //   targetUrl = `https://api.arquivei.com.br/${
-    //     dataNFe.isV2 ? "v2" : "v1"
-    //   }/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${
-    //     dataNFe.dateTo
-    //   }&cursor=${dataNFe.cursor}&format_type=JSON&limit=${limit}`;
-    // } else {
-    //   targetUrl = `https://api.arquivei.com.br/${
-    //     dataNFe.isV2 ? "v2" : "v1"
-    //   }/nfe/received?created_at[from]=${dataNFe.dateFrom}&created_at[to]=${
-    //     dataNFe.dateTo
-    //   }&format_type=JSON&limit=${limit}`;
-    // }
+    console.log(`RODANDO COM O INPUT NFE:`);
+    console.log(dataNFe);
+    const targetUrl = QiveApi.buildReceivedUrlTest(
+      "nfe",
+      dataNFe,
+      limit,
+      false,
+    );
 
     let nextUrl = targetUrl;
     let count = 1;
@@ -271,39 +293,17 @@ export default class QiveApi {
         "Content-Type": "application/json",
       },
     };
-    let targetUrl;
-    if (dataNFSe.cursor) {
-      targetUrl = `https://api.arquivei.com.br/${
-        dataNFSe.isV2 ? "v2" : "v1"
-      }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
-        dataNFSe.dateTo
-      }&cursor=${
-        dataNFSe.cursor
-      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-    } else {
-      targetUrl = `https://api.arquivei.com.br/${
-        dataNFSe.isV2 ? "v2" : "v1"
-      }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
-        dataNFSe.dateTo
-      }&format_type=JSON&limit=${limit}&filter=(NOT_EXISTS status INSERIDA)`;
-    }
-    //APAGARRRRRRRRRRRRRRRRRRRRRRRRRR
-    // if (dataNFSe.cursor) {
-    //   targetUrl = `https://api.arquivei.com.br/${
-    //     dataNFSe.isV2 ? "v2" : "v1"
-    //   }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
-    //     dataNFSe.dateTo
-    //   }&cursor=${dataNFSe.cursor}&format_type=JSON&limit=${3}`;
-    // } else {
-    //   targetUrl = `https://api.arquivei.com.br/${
-    //     dataNFSe.isV2 ? "v2" : "v1"
-    //   }/nfse/received?created_at[from]=${dataNFSe.dateFrom}&created_at[to]=${
-    //     dataNFSe.dateTo
-    //   }&format_type=JSON&limit=${3}`;
-    // }
+    const targetUrl = QiveApi.buildReceivedUrlTest(
+      "nfse",
+      dataNFSe,
+      limit,
+      false,
+    );
+    console.log("PRIMEIRO REQUEST NFSE: " + targetUrl);
     let nextUrl = targetUrl;
     let count = 1;
     let fieldsFormArr;
+    console.log(targetUrl);
     while (count > 0) {
       const res = await this.#axios.get(nextUrl, options);
       nextUrl = res.data.page.next;
@@ -760,9 +760,7 @@ export default class QiveApi {
         `Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}:`,
         res,
       );
-      throw new Error(
-        `Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}`,
-      );
+      return undefined;
     }
     if (res.success) {
       const data = res.data;
@@ -776,5 +774,6 @@ export default class QiveApi {
         return (data[0] as { Descricao: string }).Descricao;
       }
     }
+    return undefined;
   }
 }
