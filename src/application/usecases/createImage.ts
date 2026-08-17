@@ -71,7 +71,7 @@ export type NotaNFSe = {
   ID?: string;
   IdNota?: string;
   ItemListaServico?: string;
-  ItemListaServicoDescricao: string;
+  ItemListaServicoDescricao: string | undefined;
   IncentivoFiscal?: string;
   Numero?: string;
   OptanteSimplesNacional?: string;
@@ -1260,7 +1260,7 @@ export default class CreateImage {
             }</strong>
             </div>
             <div class="nfse-discriminacao-descricao">
-              <span class="label">Descrição:</span> <span>${nota.ItemListaServicoDescricao}</span>
+              <span class="label">Descrição:</span> <span>${nota.ItemListaServicoDescricao || "SERVIÇO NÃO ENCONTRADO"}</span>
             </div>
             <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-texto">${this.safeValue(
               nota.Discriminacao,

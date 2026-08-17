@@ -44,7 +44,7 @@ export interface IApiNota {
     linkNames: Omit<IZohoLinksNames, "reportName">,
   ): Promise<{ result: unknown[] }>;
   saveRecords(
-    contents: { data: { [key: string]: any } }[],
+    contents: { data: { [key: string]: any }[] },
     linkNames: Omit<IZohoLinksNames, "reportName">,
   ): Promise<{ result: unknown[] }>;
   uploadFile(data: {
@@ -102,12 +102,6 @@ export default class ZohoApi implements IApiNota {
   #credentials: ZohoCredentials;
   constructor(credentials: ZohoCredentials) {
     this.#credentials = credentials;
-  }
-  saveRecords(
-    contents: { data: { [key: string]: any } }[],
-    linkNames: Omit<IZohoLinksNames, "reportName">,
-  ): Promise<{ result: unknown[] }> {
-    //TODO: Implementar saveRecords
   }
 
   static async init(credentials: ZohoCredentials) {
@@ -487,6 +481,63 @@ export default class ZohoApi implements IApiNota {
       console.error(e);
       throw e;
     }
+  }
+
+  async saveRecords(
+    contents: { data: { [key: string]: any }[] },
+    linkNames: Omit<IZohoLinksNames, "reportName">,
+  ): Promise<{ result: unknown[] }> {
+    const attempt = 0;
+    if (!this.#accessToken) {
+      await this.updateTokenWithRetry(attempt, 3);
+    }
+    if (!this.#accessToken) {
+      throw new Error("accessToken is null");
+    }
+    const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linkNames.appName}/form/${linkNames.formName}`;
+
+    const requestOptions = {
+      headers: {
+        Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+        "Content-Type": "application/json",
+      },
+    };
+    try {
+      const res = await this.#axios.post(url, contents, requestOptions);
+      console.log(`Resutado record salvo: `);
+      console.log(res);
+      const resultVerificationZohoReq = this.verifyErrorZohoReq(res.data);
+      if (resultVerificationZohoReq.hasError) {
+        const errorMessage = resultVerificationZohoReq.errorValue.toString();
+        console.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+      return res.data as { result: unknown[] };
+    } catch (e: unknown) {
+      if (axios.isAxiosError(e)) {
+        console.error(e.response?.data);
+        throw e;
+      }
+      console.error("Erro inesperado:");
+      console.error(e);
+      throw e;
+    }
+  }
+
+  private verifyErrorZohoReq(dataResult: {
+    code: number;
+    result: [{ code: number; error: string[] }];
+  }): {
+    hasError: boolean;
+    errorValue: string[];
+  } {
+    if (dataResult.code != 3000) return { hasError: false, errorValue: [] };
+    const hasError = dataResult.result.some((r) => r.code != 3000);
+    if (!hasError) {
+      return { hasError, errorValue: [""] };
+    }
+    const errors = dataResult.result.flatMap((r) => r.error);
+    return { hasError: true, errorValue: errors };
   }
 
   public async uploadFile(data: {
