@@ -94,7 +94,7 @@ class ZohoApi {
                     Accept: "application/json",
                 },
             };
-            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${criteria ? `?criteria=${criteria}` : ""}`;
+            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${criteria ? `?criteria=${encodeURIComponent(criteria)}` : ""}`;
             const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
             const data = result.data;
             if (data.code !== 3000) {
@@ -347,6 +347,53 @@ class ZohoApi {
             console.error(e);
             throw e;
         }
+    }
+    async saveRecords(contents, linkNames) {
+        const attempt = 0;
+        if (!__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")) {
+            await this.updateTokenWithRetry(attempt, 3);
+        }
+        if (!__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")) {
+            throw new Error("accessToken is null");
+        }
+        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linkNames.appName}/form/${linkNames.formName}`;
+        const requestOptions = {
+            headers: {
+                Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                "Content-Type": "application/json",
+            },
+        };
+        try {
+            const res = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").post(url, contents, requestOptions);
+            console.log(`Resutado record salvo: `);
+            console.log(res);
+            const resultVerificationZohoReq = this.verifyErrorZohoReq(res.data);
+            if (resultVerificationZohoReq.hasError) {
+                const errorMessage = resultVerificationZohoReq.errorValue.toString();
+                console.error(errorMessage);
+                throw new Error(errorMessage);
+            }
+            return res.data;
+        }
+        catch (e) {
+            if (axios_1.default.isAxiosError(e)) {
+                console.error(e.response?.data);
+                throw e;
+            }
+            console.error("Erro inesperado:");
+            console.error(e);
+            throw e;
+        }
+    }
+    verifyErrorZohoReq(dataResult) {
+        if (dataResult.code != 3000)
+            return { hasError: false, errorValue: [] };
+        const hasError = dataResult.result.some((r) => r.code != 3000);
+        if (!hasError) {
+            return { hasError, errorValue: [""] };
+        }
+        const errors = dataResult.result.flatMap((r) => r.error);
+        return { hasError: true, errorValue: errors };
     }
     async uploadFile(data) {
         if (!__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")) {

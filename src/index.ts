@@ -202,28 +202,28 @@ async function main() {
       console.error("✗ Erro ao processar NFSe:");
       console.error(JSON.stringify(createNfseResult.error, null, 2));
     }
-    // console.log("\n=== ATUALIZANDO NFSe CANCELADAS ===");
-    // const nfseUpdateCancelledResult =
-    //   await nfseController.updateCancelledNFSe();
-    // if (nfseUpdateCancelledResult === 200) {
-    //   console.log("✓ NFSe canceladas atualizadas com sucesso.");
-    // } else if (nfseUpdateCancelledResult === 204) {
-    //   console.log("Nenhuma NFSe cancelada para atualizar.");
-    // } else {
-    //   console.error("✗ Erro ao atualizar NFSe canceladas.");
-    //   console.error(nfseUpdateCancelledResult);
-    // }
-    // console.log("\n=== ATUALIZANDO NFe CANCELADAS ===");
-    // const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
+    console.log("\n=== ATUALIZANDO NFSe CANCELADAS ===");
+    const nfseUpdateCancelledResult =
+      await nfseController.updateCancelledNFSe();
+    if (nfseUpdateCancelledResult === 200) {
+      console.log("✓ NFSe canceladas atualizadas com sucesso.");
+    } else if (nfseUpdateCancelledResult === 204) {
+      console.log("Nenhuma NFSe cancelada para atualizar.");
+    } else {
+      console.error("✗ Erro ao atualizar NFSe canceladas.");
+      console.error(nfseUpdateCancelledResult);
+    }
+    console.log("\n=== ATUALIZANDO NFe CANCELADAS ===");
+    const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
 
-    // if (nfeUpdateCancelledResult === 200) {
-    //   console.log("✓ NFe canceladas atualizadas com sucesso.");
-    // } else if (nfeUpdateCancelledResult === 204) {
-    //   console.log("Nenhuma NFe cancelada para atualizar.");
-    // } else {
-    //   console.error("✗ Erro ao atualizar NFe canceladas.");
-    //   console.error(nfeUpdateCancelledResult);
-    // }
+    if (nfeUpdateCancelledResult === 200) {
+      console.log("✓ NFe canceladas atualizadas com sucesso.");
+    } else if (nfeUpdateCancelledResult === 204) {
+      console.log("Nenhuma NFe cancelada para atualizar.");
+    } else {
+      console.error("✗ Erro ao atualizar NFe canceladas.");
+      console.error(nfeUpdateCancelledResult);
+    }
 
     console.log("\n✓ PROCESSAMENTO CONCLUÍDO COM SUCESSO!");
   } catch (error: any) {

@@ -1045,7 +1045,7 @@ class CreateImage {
             <div class="nfse-discriminacao-conteudo">Código do serviço: <strong> ${nota.ItemListaServico}</strong>
             </div>
             <div class="nfse-discriminacao-descricao">
-              <span class="label">Descrição:</span> <span>${nota.ItemListaServicoDescricao}</span>
+              <span class="label">Descrição:</span> <span>${nota.ItemListaServicoDescricao || "SERVIÇO NÃO ENCONTRADO"}</span>
             </div>
             <div class="nfse-discriminacao-conteudo nfse-discriminacao-conteudo-texto">${this.safeValue(nota.Discriminacao)}</div>
           </div>

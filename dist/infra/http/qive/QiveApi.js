@@ -23,6 +23,7 @@ const formatDateToCustom_1 = __importDefault(require("../../utils/formatDateToCu
 const formatDateOnlyDDMMMYYYY_1 = __importDefault(require("../../utils/formatDateOnlyDDMMMYYYY"));
 const node_path_1 = __importDefault(require("node:path"));
 const municipios_1 = require("../../utils/municipios");
+const sleep_1 = __importDefault(require("../../utils/sleep"));
 const ResSuccessUpdateQive = zod_1.z.object({
     status: zod_1.z.object({
         code: zod_1.z.number(),
@@ -71,6 +72,21 @@ class QiveApi {
         }
         return url.toString();
     }
+    static buildReceivedUrlTest(notaType, data, limit, filtred, cnpjTeste) {
+        const url = new URL(`https://api.arquivei.com.br/${data.isV2 ? "v2" : "v1"}/${notaType}/received`);
+        url.searchParams.set("created_at[from]", data.dateFrom);
+        url.searchParams.set("created_at[to]", data.dateTo);
+        url.searchParams.set("format_type", "JSON");
+        url.searchParams.set("limit", limit.toString());
+        if (cnpjTeste) {
+            url.searchParams.set("cnpj[]", cnpjTeste);
+        }
+        if (filtred) {
+            console.log("ENTROU NO FILTRO");
+            url.searchParams.set("filter", "(NOT_EXISTS status INSERIDA)");
+        }
+        return url.toString();
+    }
     async updateNota(content, typeNota) {
         let targetUrl = "";
         if (typeNota === "nfe") {
@@ -113,6 +129,8 @@ class QiveApi {
                 "Content-Type": "application/json",
             },
         };
+        console.log(`RODANDO COM O INPUT NFE:`);
+        console.log(dataNFe);
         const targetUrl = QiveApi.buildReceivedUrl("nfe", dataNFe, limit);
         let nextUrl = targetUrl;
         let count = 1;
@@ -143,6 +161,7 @@ class QiveApi {
                     const pdfBuffer = await __classPrivateFieldGet(this, _QiveApi_createImage, "f").renderizarNotaNfe(nota);
                     pdfsBuffer.push(pdfBuffer);
                 }
+                await (0, sleep_1.default)(1000 * 60);
                 for (let i = 0; i < currentBatchIds.length; i++) {
                     const params = {
                         idCreatedRecord: currentBatchIds[i],
@@ -186,10 +205,13 @@ class QiveApi {
                 "Content-Type": "application/json",
             },
         };
+        const cnpjTeste = "07047492000110";
         const targetUrl = QiveApi.buildReceivedUrl("nfse", dataNFSe, limit);
+        console.log("PRIMEIRO REQUEST NFSE: " + targetUrl);
         let nextUrl = targetUrl;
         let count = 1;
         let fieldsFormArr;
+        console.log(targetUrl);
         while (count > 0) {
             const res = await __classPrivateFieldGet(this, _QiveApi_axios, "f").get(nextUrl, options);
             nextUrl = res.data.page.next;
@@ -197,7 +219,7 @@ class QiveApi {
             if (!res.data.data.length)
                 continue;
             fieldsFormArr = await QiveApi.getValuesNFSe(res.data.data, this.findDescricaoCod.bind(this));
-            console.log(`Notas NFSe encontradas: ${fieldsFormArr}`);
+            console.log(`Notas NFSe encontradas: ${JSON.stringify(fieldsFormArr)}`);
             const idsNotas = fieldsFormArr.map((el) => el.IdNota);
             const idsParaAtualizarNotas = fieldsFormArr.map((el) => ({
                 id: el.IdNota,
@@ -210,7 +232,11 @@ class QiveApi {
             };
             const attemptsNumber = 3;
             try {
-                const resZ = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").insertRecord(field, __classPrivateFieldGet(this, _QiveApi_successConfig, "f"), attemptsNumber);
+                const nfseLinksName = {
+                    appName: "base-notas-qive",
+                    formName: "Copy_of_NFSe",
+                };
+                const resZ = await __classPrivateFieldGet(this, _QiveApi_zohoApi, "f").saveRecords(field, nfseLinksName);
                 const currentBatchIds = resZ.result.map((el) => el.data.ID);
                 __classPrivateFieldGet(this, _QiveApi_idsFoundedNotas, "f").nfse.idRecord.push(...currentBatchIds);
                 const pdfNfseBuffers = [];
@@ -344,13 +370,13 @@ class QiveApi {
             const infDeclaracaoPrestacaoServico = infNfse.DeclaracaoPrestacaoServico.InfDeclaracaoPrestacaoServico;
             const rps = infDeclaracaoPrestacaoServico.Rps
                 ? infDeclaracaoPrestacaoServico.Rps
-                : null;
-            const identificacaoRps = rps && rps.IdentificacaoRps ? rps.IdentificacaoRps : null;
+                : undefined;
+            const identificacaoRps = rps && rps.IdentificacaoRps ? rps.IdentificacaoRps : undefined;
             const servicos = infDeclaracaoPrestacaoServico.Servico;
             const prestador = infDeclaracaoPrestacaoServico.Prestador;
             const tomador = infDeclaracaoPrestacaoServico.Tomador;
             const identificacaoTomador = tomador.IdentificacaoTomador;
-            const itemListaServicoDescricao = (await findDescricaoCod(servicos.ItemListaServico, infNfse.CodigoVerificacao)) || "SERVIÇO NÃO ENCONTRADO";
+            const itemListaServicoDescricao = await findDescricaoCod(servicos.ItemListaServico, infNfse.CodigoVerificacao);
             return {
                 IdNota: d.id,
                 Tipo: "nfse",
@@ -388,14 +414,14 @@ class QiveApi {
                 PrestadorServicoEmail: (prestadorServico &&
                     prestadorServico.Contato &&
                     prestadorServico.Contato.Email) ||
-                    null,
-                RpsNumero: identificacaoRps ? identificacaoRps.Numero : null,
-                RpsSerie: identificacaoRps ? identificacaoRps.Serie : null,
-                RpsTipo: identificacaoRps ? identificacaoRps.Tipo : null,
+                    undefined,
+                RpsNumero: identificacaoRps ? identificacaoRps.Numero : undefined,
+                RpsSerie: identificacaoRps ? identificacaoRps.Serie : undefined,
+                RpsTipo: identificacaoRps ? identificacaoRps.Tipo : undefined,
                 RpsDataEmissao: rps && rps.DataEmissao
                     ? (0, formatDateOnlyDDMMMYYYY_1.default)(rps.DataEmissao)
-                    : null,
-                RpsStatus: rps && rps.Status ? rps.Status : null,
+                    : undefined,
+                RpsStatus: rps && rps.Status ? rps.Status : undefined,
                 Competencia: declaracaoPrestacaoServico.Competencia,
                 ServicoValores: servicos.Valores,
                 IssRetido: servicos.IssRetido,
@@ -406,7 +432,8 @@ class QiveApi {
                 CodigoMunicipio: servicos.CodigoMunicipio || "",
                 NomeMunicipio: municipios.obterNomePorCodigo(servicos.MunicipioIncidencia) || "",
                 MunicipioIncidencia: servicos.MunicipioIncidencia || "",
-                NomeMunicipioIncidencia: municipios.obterNomePorCodigo(servicos.MunicipioIncidencia),
+                NomeMunicipioIncidencia: municipios.obterNomePorCodigo(servicos.MunicipioIncidencia) ||
+                    undefined,
                 PrestadorCpnj: prestador.CpfCnpj.Cnpj,
                 PrestadorCpf: prestador.CpfCnpj.Cpf,
                 PrestadorInscricaoMunicipal: prestador.InscricaoMunicipal,
@@ -580,7 +607,7 @@ class QiveApi {
         }, criterio);
         if (!res.success) {
             console.error(`Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}:`, res);
-            throw new Error(`Erro ao buscar descrição do código ${codigo} para a nota ${codVerificao}`);
+            return undefined;
         }
         if (res.success) {
             const data = res.data;
@@ -592,6 +619,7 @@ class QiveApi {
                 return data[0].Descricao;
             }
         }
+        return undefined;
     }
 }
 _QiveApi_zohoApi = new WeakMap(), _QiveApi_createImage = new WeakMap(), _QiveApi_axios = new WeakMap(), _QiveApi_idsFoundedNotas = new WeakMap(), _QiveApi_credentials = new WeakMap(), _QiveApi_successConfig = new WeakMap();
