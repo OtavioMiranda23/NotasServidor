@@ -9,7 +9,7 @@ exports.DataNFeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFeController {
-    constructor(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor, verifyCancelledNotas) {
+    constructor(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor, verifyCancelledNotas, errorLogger) {
         this.getNFe = getNFe;
         this.dateToSearch = dateToSearch?.trim() || undefined;
         this.getCancelledNFe = getCancelledNFe;
@@ -17,6 +17,7 @@ class NFeController {
         this.getLastCursor = getLastCursor;
         this.updateLastCursor = updateLastCursor;
         this.verifyCancelledNotas = verifyCancelledNotas;
+        this.errorLogger = errorLogger;
     }
     async createNFe(errorConfig) {
         try {
@@ -45,6 +46,7 @@ class NFeController {
             };
         }
         catch (e) {
+            await this.errorLogger.log(e, "NFeController.createNFe");
             return {
                 status: e.statusCode || 500,
                 error: {
@@ -102,6 +104,7 @@ class NFeController {
             return 200;
         }
         catch (e) {
+            await this.errorLogger.log(e, "NFeController.updateCancelledNFe");
             console.error("Erro ao atualizar NFe canceladas:", e);
             return 500;
         }

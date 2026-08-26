@@ -9,7 +9,7 @@ exports.DataNFSeSchema = zod_1.z.object({
     isV2: zod_1.z.boolean(),
 });
 class NFSeController {
-    constructor(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor, verifyCancelledNotas) {
+    constructor(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor, verifyCancelledNotas, errorLogger) {
         this.getNFSe = getNFSe;
         this.dateToSearch = dateToSearch?.trim() || undefined;
         this.getCancelledNFSe = getCancelledNFSe;
@@ -17,6 +17,7 @@ class NFSeController {
         this.getLastCursor = getLastCursor;
         this.updateLastCursor = updateLastCursor;
         this.verifyCancelledNotas = verifyCancelledNotas;
+        this.errorLogger = errorLogger;
     }
     async createNFSe(errorConfig) {
         try {
@@ -44,6 +45,7 @@ class NFSeController {
             };
         }
         catch (e) {
+            await this.errorLogger.log(e, "NFSeController.createNFSe");
             return {
                 status: e.statusCode || 500,
                 error: {
@@ -101,6 +103,7 @@ class NFSeController {
             return 200;
         }
         catch (e) {
+            await this.errorLogger.log(e, "NFSeController.updateCancelledNFSe");
             console.error("Erro ao atualizar NFSe canceladas:");
             console.error(e);
             return 500;

@@ -15,6 +15,7 @@ import { GetLastCursor } from "./application/usecases/getLastCursor";
 import { GetCancelledNFe } from "./application/usecases/getCancelledNFe";
 import DisableNfes from "./application/usecases/disableNfes";
 import { VerifyCancelledNotas } from "./application/usecases/verifyCancelledNotas";
+import ErrorLogger from "./infra/errorHandling/ErrorLogger";
 
 // const logger = new Logger("app.log");
 
@@ -117,6 +118,13 @@ async function main() {
       formName: process.env.ERROR_NFSE_FORM_NAME || "Copy_Logger_NFSe_Cursor",
       tableName: process.env.TABLE_NAME || "base-notas-qive",
     };
+
+    // Configuração do formulário de log de erros
+    const errorLogConfig = {
+      appName: "base-notas-qive",
+      formName: "Log_Backend_Notas",
+    };
+
     console.log("VARIAVEIS");
 
     let dateToSearch = process.env.DATE_TO_SEARCH;
@@ -139,6 +147,7 @@ async function main() {
     console.log("\nInicializando ZohoApi...");
     const createImage = new CreateImage();
     const zohoApi = await ZohoApi.init(credentialsZoho);
+    const errorLogger = new ErrorLogger(zohoApi);
     const qive = new QiveApi(
       zohoApi,
       createImage,
@@ -168,6 +177,7 @@ async function main() {
       getLastCursor,
       updateLastCursor,
       verifyCancelledNotas,
+      errorLogger,
     );
     const nfseController = new NFSeController(
       getNFSe,
@@ -177,6 +187,7 @@ async function main() {
       getLastCursor,
       updateLastCursor,
       verifyCancelledNotas,
+      errorLogger,
     );
     console.log("✓ Controllers criados");
 
@@ -197,7 +208,7 @@ async function main() {
     const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
     if (createNfseResult.status === 200) {
       console.log("✓ NFSe processada com sucesso:");
-      console.log(JSON.stringify(createNfseResult.data, null, 2));
+      // console.log(JSON.stringify(createNfseResult.data, null, 2));
     } else {
       console.error("✗ Erro ao processar NFSe:");
       console.error(JSON.stringify(createNfseResult.error, null, 2));

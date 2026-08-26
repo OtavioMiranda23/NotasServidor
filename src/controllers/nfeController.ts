@@ -8,6 +8,7 @@ import { UpdateLastCursor } from "../application/usecases/updateLastCursor";
 import { GetCancelledNFe } from "../application/usecases/getCancelledNFe";
 import DisableNfes from "../application/usecases/disableNfes";
 import { VerifyCancelledNotas } from "../application/usecases/verifyCancelledNotas";
+import ErrorLogger from "../infra/errorHandling/ErrorLogger";
 
 export const DataNFeSchema = z.object({
   dateFrom: z.string(),
@@ -24,6 +25,7 @@ export default class NFeController {
   private getLastCursor: GetLastCursor;
   private updateLastCursor: UpdateLastCursor;
   private verifyCancelledNotas: VerifyCancelledNotas;
+  private errorLogger: ErrorLogger;
   constructor(
     getNFe: GetNFe,
     dateToSearch: string | undefined,
@@ -32,6 +34,7 @@ export default class NFeController {
     getLastCursor: GetLastCursor,
     updateLastCursor: UpdateLastCursor,
     verifyCancelledNotas: VerifyCancelledNotas,
+    errorLogger: ErrorLogger,
   ) {
     this.getNFe = getNFe;
     this.dateToSearch = dateToSearch?.trim() || undefined;
@@ -40,6 +43,7 @@ export default class NFeController {
     this.getLastCursor = getLastCursor;
     this.updateLastCursor = updateLastCursor;
     this.verifyCancelledNotas = verifyCancelledNotas;
+    this.errorLogger = errorLogger;
   }
 
   public async createNFe(errorConfig: IBaseConfigApi) {
@@ -69,6 +73,7 @@ export default class NFeController {
         data: result,
       };
     } catch (e: any) {
+      await this.errorLogger.log(e, "NFeController.createNFe");
       return {
         status: e.statusCode || 500,
         error: {
@@ -142,6 +147,7 @@ export default class NFeController {
       console.log(updatedCursor);
       return 200;
     } catch (e) {
+      await this.errorLogger.log(e, "NFeController.updateCancelledNFe");
       console.error("Erro ao atualizar NFe canceladas:", e);
       return 500;
     }

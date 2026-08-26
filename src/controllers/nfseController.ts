@@ -7,6 +7,7 @@ import { UpdateLastCursor } from "../application/usecases/updateLastCursor";
 import { GetLastCursor } from "../application/usecases/getLastCursor";
 import { ca } from "zod/v4/locales";
 import { VerifyCancelledNotas } from "../application/usecases/verifyCancelledNotas";
+import ErrorLogger from "../infra/errorHandling/ErrorLogger";
 
 export const DataNFSeSchema = z.object({
   dateFrom: z.string(),
@@ -23,6 +24,7 @@ export default class NFSeController {
   private getLastCursor: GetLastCursor;
   private updateLastCursor: UpdateLastCursor;
   private verifyCancelledNotas: VerifyCancelledNotas;
+  private errorLogger: ErrorLogger;
   constructor(
     getNFSe: GetNFSe,
     dateToSearch: string | undefined,
@@ -31,6 +33,7 @@ export default class NFSeController {
     getLastCursor: GetLastCursor,
     updateLastCursor: UpdateLastCursor,
     verifyCancelledNotas: VerifyCancelledNotas,
+    errorLogger: ErrorLogger,
   ) {
     this.getNFSe = getNFSe;
     this.dateToSearch = dateToSearch?.trim() || undefined;
@@ -39,6 +42,7 @@ export default class NFSeController {
     this.getLastCursor = getLastCursor;
     this.updateLastCursor = updateLastCursor;
     this.verifyCancelledNotas = verifyCancelledNotas;
+    this.errorLogger = errorLogger;
   }
 
   public async createNFSe(errorConfig: IBaseConfigApi) {
@@ -59,7 +63,6 @@ export default class NFSeController {
       };
       console.log(`RODANDO COM O INPUT:`);
       console.log(input);
-
       const dataResult = await this.getNFSe.execute(input, errorConfig);
       const result = {
         data: dataResult,
@@ -70,6 +73,7 @@ export default class NFSeController {
         data: result,
       };
     } catch (e: any) {
+      await this.errorLogger.log(e, "NFSeController.createNFSe");
       return {
         status: e.statusCode || 500,
         error: {
@@ -143,6 +147,7 @@ export default class NFSeController {
       console.log(updatedCursor);
       return 200;
     } catch (e) {
+      await this.errorLogger.log(e, "NFSeController.updateCancelledNFSe");
       console.error("Erro ao atualizar NFSe canceladas:");
       console.error(e);
       return 500;

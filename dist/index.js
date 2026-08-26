@@ -19,6 +19,7 @@ const getLastCursor_1 = require("./application/usecases/getLastCursor");
 const getCancelledNFe_1 = require("./application/usecases/getCancelledNFe");
 const disableNfes_1 = __importDefault(require("./application/usecases/disableNfes"));
 const verifyCancelledNotas_1 = require("./application/usecases/verifyCancelledNotas");
+const ErrorLogger_1 = __importDefault(require("./infra/errorHandling/ErrorLogger"));
 const baseDir = process.pkg
     ? path_1.default.dirname(process.execPath)
     : process.cwd();
@@ -86,6 +87,10 @@ async function main() {
             formName: process.env.ERROR_NFSE_FORM_NAME || "Copy_Logger_NFSe_Cursor",
             tableName: process.env.TABLE_NAME || "base-notas-qive",
         };
+        const errorLogConfig = {
+            appName: "base-notas-qive",
+            formName: "Log_Backend_Notas",
+        };
         console.log("VARIAVEIS");
         let dateToSearch = process.env.DATE_TO_SEARCH;
         if (!process.env.DATE_TO_SEARCH ||
@@ -96,6 +101,7 @@ async function main() {
         console.log("\nInicializando ZohoApi...");
         const createImage = new createImage_1.default();
         const zohoApi = await ZohoApi_1.default.init(credentialsZoho);
+        const errorLogger = new ErrorLogger_1.default(zohoApi);
         const qive = new QiveApi_1.default(zohoApi, createImage, credentialsQive, successNFeConfig);
         console.log("✓ ZohoApi inicializada com sucesso");
         console.log("\nCriando use cases...");
@@ -110,8 +116,8 @@ async function main() {
         const verifyCancelledNotas = new verifyCancelledNotas_1.VerifyCancelledNotas(zohoApi);
         console.log("✓ Use cases criados");
         console.log("\nCriando controllers...");
-        const nfeController = new nfeController_1.default(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor, verifyCancelledNotas);
-        const nfseController = new nfseController_1.default(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor, verifyCancelledNotas);
+        const nfeController = new nfeController_1.default(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor, verifyCancelledNotas, errorLogger);
+        const nfseController = new nfseController_1.default(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor, verifyCancelledNotas, errorLogger);
         console.log("✓ Controllers criados");
         console.log(dateToSearch);
         console.log("\n=== PROCESSANDO NFe ===");
@@ -128,7 +134,6 @@ async function main() {
         const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
         if (createNfseResult.status === 200) {
             console.log("✓ NFSe processada com sucesso:");
-            console.log(JSON.stringify(createNfseResult.data, null, 2));
         }
         else {
             console.error("✗ Erro ao processar NFSe:");
