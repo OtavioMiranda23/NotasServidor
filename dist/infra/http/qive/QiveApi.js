@@ -361,7 +361,7 @@ class QiveApi {
     static async getValuesNFSe(data, findDescricaoCod) {
         const pathMunicipios = node_path_1.default.resolve(__dirname, "../../../../municipios.json");
         const municipios = new municipios_1.Municipios(pathMunicipios);
-        return Promise.all(data.map(async (d) => {
+        const processItem = async (d) => {
             const infNfse = d.xml.Nfse.InfNfse;
             const valoresNfse = infNfse.ValoresNfse;
             const prestadorServico = infNfse.PrestadorServico;
@@ -468,7 +468,18 @@ class QiveApi {
                 OptanteSimplesNacional: infDeclaracaoPrestacaoServico.OptanteSimplesNacional,
                 IncentivoFiscal: infDeclaracaoPrestacaoServico.IncentivoFiscal,
             };
-        }));
+        };
+        const results = [];
+        for (let i = 0; i < data.length; i += 10) {
+            const batch = data.slice(i, i + 10);
+            for (const d of batch) {
+                results.push(await processItem(d));
+            }
+            if (i + 10 < data.length) {
+                await (0, sleep_1.default)(60000);
+            }
+        }
+        return results;
     }
     static getValues(dataArr) {
         return dataArr.map((d) => {

@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
-import { z } from "zod";
+import { set, z } from "zod";
 import sleep from "../../utils/sleep";
 import InsertZohoError from "../../errorHandling/InsertZohoError";
 import ZohoGenericError from "../../errorHandling/ZohoGenericError";
@@ -161,38 +161,120 @@ export default class ZohoApi implements IApiNota {
     linksNames: Omit<IZohoLinksNames, "formName">,
     criteria?: string,
   ): Promise<{ success: boolean; data: unknown[] }> {
-    try {
-      const requestOptions = {
-        headers: {
-          Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      };
-      const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${
-        criteria ? `?criteria=${encodeURIComponent(criteria)}` : ""
-      }`;
-      const result = await this.#axios.get(url, requestOptions);
-      const data = result.data;
-      if (data.code !== 3000) {
-        return { success: false, data: data };
+    const url =
+      `https://www.zohoapis.com/creator/v2.1/data/guillaumon/` +
+      `${linksNames.appName}/report/${linksNames.reportName}`;
+
+    let finalResult: { success: boolean; data: unknown[] } = {
+      success: false,
+      data: [],
+    };
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        // Garante que temos um token antes da requisição
+        if (!this.#accessToken) {
+          await this.updateTokenWithRetry(0, 3);
+        }
+
+        if (!this.#accessToken) {
+          throw new Error("accessToken is null");
+        }
+
+        console.log(`findAllItems URL: ${url}`);
+        console.log(`findAllItems criteria: ${criteria ?? "nenhum"}`);
+        console.log(`Tentativa: ${attempt + 1}`);
+
+        const result = await this.#axios.get(url, {
+          headers: {
+            Authorization: `Zoho-oauthtoken ${this.#accessToken}`,
+            Accept: "application/json",
+          },
+          params: criteria
+            ? {
+                criteria,
+              }
+            : undefined,
+          timeout: 15000,
+        });
+
+        const data = result.data;
+
+        console.log(`findAllItems result: ${JSON.stringify(data)}`);
+
+        if (data.code !== 3000) {
+          finalResult = {
+            success: false,
+            data,
+          };
+          break;
+        }
+
+        finalResult = {
+          success: true,
+          data: data.data,
+        };
+        break;
+      } catch (error) {
+        finalResult = {
+          success: false,
+          data: [],
+        };
       }
-      return { success: true, data: data.data };
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.data.code === 9280) {
-        return { success: false, data: [] };
-      }
-      console.error("Erro ao buscar todos os itens:");
-      //@ts-ignore
-      if (error.response && error.response.data) {
-        //@ts-ignore
-        console.error(error.response.data);
-      } else {
-        console.error(error);
-      }
-      throw error;
     }
+
+    return finalResult;
   }
+  //     console.error(
+  //       `Erro ao buscar todos os itens (tentativa ${attempt + 1}):`,
+  //     );
+
+  //     if (axios.isAxiosError(error)) {
+  //       console.error("Status:", error.response?.status);
+  //       console.error("Data:", error.response?.data);
+  //       console.error("Message:", error.message);
+
+  //       // Token expirado/inválido
+  //       if (error.response?.status === 401) {
+  //         console.warn("401 recebido. Renovando token do Zoho...");
+
+  //         this.#accessToken = null;
+
+  //         await this.updateTokenWithRetry(0, 3);
+
+  //         if (!this.#accessToken) {
+  //           throw new Error(
+  //             "Falha ao renovar o token do Zoho após receber 401",
+  //           );
+  //         }
+
+  //         // Se foi a primeira tentativa, repete a requisição
+  //         if (attempt === 0) {
+  //           continue;
+  //         }
+  //       }
+
+  //       // Registro não encontrado
+  //       if (error.response?.data?.code === 9280) {
+  //         return {
+  //           success: false,
+  //           data: [],
+  //         };
+  //       }
+
+  //       // Timeout
+  //       if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+  //         throw new Error("Timeout ao buscar itens no Zoho");
+  //       }
+  //     }
+
+  //     throw error;
+  //   }
+  // }
+
+  // throw new Error(
+  //   "Não foi possível buscar itens após as tentativas disponíveis",
+  // );
 
   async deleteAllRecordsNFeTest(query: string) {
     const requestOptions = {
@@ -377,7 +459,13 @@ export default class ZohoApi implements IApiNota {
       },
     };
     const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}?${field.key}=${field.value}`;
-    const result = await this.#axios.get(url, requestOptions);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const result = await this.#axios.get(url, {
+      ...requestOptions,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
     return result;
   }
   /**
@@ -572,7 +660,13 @@ export default class ZohoApi implements IApiNota {
         },
         data: formData,
       };
-      const response = await axios.request(config);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const response = await axios.request({
+        ...config,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
       console.log(
         `Buffer criado para a nota ${data.idCreatedRecord}: ${data.buffer.length} bytes`,
       );

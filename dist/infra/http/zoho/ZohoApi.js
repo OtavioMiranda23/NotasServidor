@@ -86,35 +86,58 @@ class ZohoApi {
         return true;
     }
     async findAllItems(linksNames, criteria) {
-        try {
-            const requestOptions = {
-                headers: {
-                    Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-            };
-            const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/${linksNames.appName}/report/${linksNames.reportName}${criteria ? `?criteria=${encodeURIComponent(criteria)}` : ""}`;
-            const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
-            const data = result.data;
-            if (data.code !== 3000) {
-                return { success: false, data: data };
+        const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/` +
+            `${linksNames.appName}/report/${linksNames.reportName}`;
+        let finalResult = {
+            success: false,
+            data: [],
+        };
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                if (!__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")) {
+                    await this.updateTokenWithRetry(0, 3);
+                }
+                if (!__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")) {
+                    throw new Error("accessToken is null");
+                }
+                console.log(`findAllItems URL: ${url}`);
+                console.log(`findAllItems criteria: ${criteria ?? "nenhum"}`);
+                console.log(`Tentativa: ${attempt + 1}`);
+                const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, {
+                    headers: {
+                        Authorization: `Zoho-oauthtoken ${__classPrivateFieldGet(this, _ZohoApi_accessToken, "f")}`,
+                        Accept: "application/json",
+                    },
+                    params: criteria
+                        ? {
+                            criteria,
+                        }
+                        : undefined,
+                    timeout: 15000,
+                });
+                const data = result.data;
+                console.log(`findAllItems result: ${JSON.stringify(data)}`);
+                if (data.code !== 3000) {
+                    finalResult = {
+                        success: false,
+                        data,
+                    };
+                    break;
+                }
+                finalResult = {
+                    success: true,
+                    data: data.data,
+                };
+                break;
             }
-            return { success: true, data: data.data };
+            catch (error) {
+                finalResult = {
+                    success: false,
+                    data: [],
+                };
+            }
         }
-        catch (error) {
-            if (axios_1.default.isAxiosError(error) && error.response?.data.code === 9280) {
-                return { success: false, data: [] };
-            }
-            console.error("Erro ao buscar todos os itens:");
-            if (error.response && error.response.data) {
-                console.error(error.response.data);
-            }
-            else {
-                console.error(error);
-            }
-            throw error;
-        }
+        return finalResult;
     }
     async deleteAllRecordsNFeTest(query) {
         const requestOptions = {
@@ -262,7 +285,13 @@ class ZohoApi {
             },
         };
         const url = `https://www.zohoapis.com/creator/v2.1/data/guillaumon/base-notas-qive/report/${reportName}?${field.key}=${field.value}`;
-        const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, requestOptions);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const result = await __classPrivateFieldGet(this, _ZohoApi_axios, "f").get(url, {
+            ...requestOptions,
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
         return result;
     }
     async insertRecord(content, config, attemptsNumber) {
@@ -420,7 +449,13 @@ class ZohoApi {
                 },
                 data: formData,
             };
-            const response = await axios_1.default.request(config);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            const response = await axios_1.default.request({
+                ...config,
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
             console.log(`Buffer criado para a nota ${data.idCreatedRecord}: ${data.buffer.length} bytes`);
             console.log(`Resposta do id da nota ${data.idCreatedRecord} upload Zoho:`);
             console.log(JSON.stringify(response.data));
