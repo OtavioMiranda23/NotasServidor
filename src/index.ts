@@ -16,6 +16,8 @@ import { GetCancelledNFe } from "./application/usecases/getCancelledNFe";
 import DisableNfes from "./application/usecases/disableNfes";
 import { VerifyCancelledNotas } from "./application/usecases/verifyCancelledNotas";
 import ErrorLogger from "./infra/errorHandling/ErrorLogger";
+import RunJob from "./application/usecases/runJob";
+import { NodeCron } from "./infra/jobs/nodeCron";
 
 // const logger = new Logger("app.log");
 
@@ -56,6 +58,7 @@ async function main() {
       "QIVE_X_API_ID",
       "X_API_KEY",
       "DATE_TO_SEARCH",
+      "CRON_EXPRESSION",
     ];
 
     console.log("\nValidando variáveis de ambiente...");
@@ -191,50 +194,24 @@ async function main() {
     );
     console.log("✓ Controllers criados");
 
-    console.log(dateToSearch);
-
-    console.log("\n=== PROCESSANDO NFe ===");
-    const nfeResult = await nfeController.createNFe(errorNFeConfig);
-
-    if (nfeResult.status === 200) {
-      console.log("✓ NFe processada com sucesso:");
-      console.log(JSON.stringify(nfeResult.data, null, 2));
-    } else {
-      console.error("✗ Erro ao processar NFe:");
-      console.error(JSON.stringify(nfeResult.error, null, 2));
-    }
-
-    console.log("\n=== PROCESSANDO NFSe ===");
-    const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
-    if (createNfseResult.status === 200) {
-      console.log("✓ NFSe processada com sucesso:");
-      // console.log(JSON.stringify(createNfseResult.data, null, 2));
-    } else {
-      console.error("✗ Erro ao processar NFSe:");
-      console.error(JSON.stringify(createNfseResult.error, null, 2));
-    }
-    console.log("\n=== ATUALIZANDO NFSe CANCELADAS ===");
-    const nfseUpdateCancelledResult =
-      await nfseController.updateCancelledNFSe();
-    if (nfseUpdateCancelledResult === 200) {
-      console.log("✓ NFSe canceladas atualizadas com sucesso.");
-    } else if (nfseUpdateCancelledResult === 204) {
-      console.log("Nenhuma NFSe cancelada para atualizar.");
-    } else {
-      console.error("✗ Erro ao atualizar NFSe canceladas.");
-      console.error(nfseUpdateCancelledResult);
-    }
-    console.log("\n=== ATUALIZANDO NFe CANCELADAS ===");
-    const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
-
-    if (nfeUpdateCancelledResult === 200) {
-      console.log("✓ NFe canceladas atualizadas com sucesso.");
-    } else if (nfeUpdateCancelledResult === 204) {
-      console.log("Nenhuma NFe cancelada para atualizar.");
-    } else {
-      console.error("✗ Erro ao atualizar NFe canceladas.");
-      console.error(nfeUpdateCancelledResult);
-    }
+    const cronJob = new NodeCron();
+    const runJob = new RunJob(cronJob);
+    const cronExpression = process.env.CRON_EXPRESSION || "0 * * * *";
+    const jobs = [
+      async () => {
+        await nfeController.createNFe(errorNFeConfig);
+      },
+      async () => {
+        await nfseController.createNFSe(errorNFSeConfig);
+      },
+      async () => {
+        await nfeController.updateCancelledNFe();
+      },
+      async () => {
+        await nfseController.updateCancelledNFSe();
+      },
+    ];
+    runJob.run(cronExpression, jobs);
 
     console.log("\n✓ PROCESSAMENTO CONCLUÍDO COM SUCESSO!");
   } catch (error: any) {
@@ -266,7 +243,7 @@ async function main() {
     console.error(error);
   } finally {
     // SEMPRE aguardar antes de fechar
-    process.exit(0);
+    // process.exit(0);
   }
 })();
 //// filepath: c:\Users\otavio.miranda\projects\pdfGenerator\src\index.ts

@@ -1,6 +1,6 @@
 import { CronAdapter } from "../../infra/jobs/nodeCron";
 
-class RunJob {
+export default class RunJob {
   constructor(private cronAdapter: CronAdapter) {}
 
   public run(cronExpression: string, tasks: (() => void)[]): void {

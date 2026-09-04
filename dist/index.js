@@ -20,6 +20,8 @@ const getCancelledNFe_1 = require("./application/usecases/getCancelledNFe");
 const disableNfes_1 = __importDefault(require("./application/usecases/disableNfes"));
 const verifyCancelledNotas_1 = require("./application/usecases/verifyCancelledNotas");
 const ErrorLogger_1 = __importDefault(require("./infra/errorHandling/ErrorLogger"));
+const runJob_1 = __importDefault(require("./application/usecases/runJob"));
+const nodeCron_1 = require("./infra/jobs/nodeCron");
 const baseDir = process.pkg
     ? path_1.default.dirname(process.execPath)
     : process.cwd();
@@ -42,6 +44,7 @@ async function main() {
             "QIVE_X_API_ID",
             "X_API_KEY",
             "DATE_TO_SEARCH",
+            "CRON_EXPRESSION",
         ];
         console.log("\nValidando variáveis de ambiente...");
         const missingEnvs = requiredEnvs.filter((env) => {
@@ -119,50 +122,24 @@ async function main() {
         const nfeController = new nfeController_1.default(getNFe, dateToSearch, getCancelledNFe, disableNfes, getLastCursor, updateLastCursor, verifyCancelledNotas, errorLogger);
         const nfseController = new nfseController_1.default(getNFSe, dateToSearch, getCancelledNFSe, disableNfses, getLastCursor, updateLastCursor, verifyCancelledNotas, errorLogger);
         console.log("✓ Controllers criados");
-        console.log(dateToSearch);
-        console.log("\n=== PROCESSANDO NFe ===");
-        const nfeResult = await nfeController.createNFe(errorNFeConfig);
-        if (nfeResult.status === 200) {
-            console.log("✓ NFe processada com sucesso:");
-            console.log(JSON.stringify(nfeResult.data, null, 2));
-        }
-        else {
-            console.error("✗ Erro ao processar NFe:");
-            console.error(JSON.stringify(nfeResult.error, null, 2));
-        }
-        console.log("\n=== PROCESSANDO NFSe ===");
-        const createNfseResult = await nfseController.createNFSe(errorNFSeConfig);
-        if (createNfseResult.status === 200) {
-            console.log("✓ NFSe processada com sucesso:");
-        }
-        else {
-            console.error("✗ Erro ao processar NFSe:");
-            console.error(JSON.stringify(createNfseResult.error, null, 2));
-        }
-        console.log("\n=== ATUALIZANDO NFSe CANCELADAS ===");
-        const nfseUpdateCancelledResult = await nfseController.updateCancelledNFSe();
-        if (nfseUpdateCancelledResult === 200) {
-            console.log("✓ NFSe canceladas atualizadas com sucesso.");
-        }
-        else if (nfseUpdateCancelledResult === 204) {
-            console.log("Nenhuma NFSe cancelada para atualizar.");
-        }
-        else {
-            console.error("✗ Erro ao atualizar NFSe canceladas.");
-            console.error(nfseUpdateCancelledResult);
-        }
-        console.log("\n=== ATUALIZANDO NFe CANCELADAS ===");
-        const nfeUpdateCancelledResult = await nfeController.updateCancelledNFe();
-        if (nfeUpdateCancelledResult === 200) {
-            console.log("✓ NFe canceladas atualizadas com sucesso.");
-        }
-        else if (nfeUpdateCancelledResult === 204) {
-            console.log("Nenhuma NFe cancelada para atualizar.");
-        }
-        else {
-            console.error("✗ Erro ao atualizar NFe canceladas.");
-            console.error(nfeUpdateCancelledResult);
-        }
+        const cronJob = new nodeCron_1.NodeCron();
+        const runJob = new runJob_1.default(cronJob);
+        const cronExpression = process.env.CRON_EXPRESSION || "0 * * * *";
+        const jobs = [
+            async () => {
+                await nfeController.createNFe(errorNFeConfig);
+            },
+            async () => {
+                await nfseController.createNFSe(errorNFSeConfig);
+            },
+            async () => {
+                await nfeController.updateCancelledNFe();
+            },
+            async () => {
+                await nfseController.updateCancelledNFSe();
+            },
+        ];
+        runJob.run(cronExpression, jobs);
         console.log("\n✓ PROCESSAMENTO CONCLUÍDO COM SUCESSO!");
     }
     catch (error) {
@@ -188,6 +165,5 @@ async function main() {
         console.error(error);
     }
     finally {
-        process.exit(0);
     }
 })();
